@@ -11,13 +11,13 @@ Vitest. Node pinned to LTS 24.20.0 (`.nvmrc`).
 
 ## Decisions locked
 
-| Question | Decision |
-| --- | --- |
-| Word artwork | Hand-authored SVG (flat vector). 3 style samples first, then all 26. |
-| Letterforms | Simple block print (Zaner-Bloser style manuscript) |
-| Hosting | GitHub Pages via Actions, `adapter-static`, base path `/letter-tracer` |
-| Audio | Silent in v1. Structure the code so a toggle can be added later. |
-| Persistence | `localStorage` only. No accounts, no network, no analytics. |
+| Question     | Decision                                                               |
+| ------------ | ---------------------------------------------------------------------- |
+| Word artwork | Hand-authored SVG (flat vector). 3 style samples first, then all 26.   |
+| Letterforms  | Simple block print (Zaner-Bloser style manuscript)                     |
+| Hosting      | GitHub Pages via Actions, `adapter-static`, base path `/letter-tracer` |
+| Audio        | Silent in v1. Structure the code so a toggle can be added later.       |
+| Persistence  | `localStorage` only. No accounts, no network, no analytics.            |
 
 ## Screens
 
@@ -100,10 +100,10 @@ Lowercase reuses the same illustrations. Digits show a **count scene** instead
 ```ts
 // localStorage key: "letter-tracer:v1"
 type Store = {
-  version: 1;
-  days: Record<string, { stars: number; chars: string[] }>; // "YYYY-MM-DD"
-  totals: { byChar: Record<string, number> };
-  lastSet: 'upper' | 'lower' | 'digits';
+	version: 1;
+	days: Record<string, { stars: number; chars: string[] }>; // "YYYY-MM-DD"
+	totals: { byChar: Record<string, number> };
+	lastSet: 'upper' | 'lower' | 'digits';
 };
 ```
 
