@@ -10,7 +10,7 @@
 	import Splash from '$lib/components/Splash.svelte';
 	import PlayHistory from '$lib/components/PlayHistory.svelte';
 	import Stars from '$lib/components/Stars.svelte';
-	import { play, unlock } from '$lib/sound';
+	import { hush, play, speak, unlock } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
 	import type { Stars as StarCount } from '$lib/trace/engine';
 
@@ -53,6 +53,10 @@
 		index = i;
 		earned = null;
 		view = 'trace';
+		// Announce the letter on arrival. When this came from an auto-advance the
+		// cheer is still ringing, and `speak` waits it out rather than shouting
+		// over it. Letters with no clip recorded yet stay quiet.
+		speak(chars[i] ?? '');
 		if (wasGrid) history.pushState({ lt: 'trace' }, '');
 	}
 
@@ -80,6 +84,7 @@
 
 	function goGrid() {
 		stopAdvance();
+		hush();
 		view = 'grid';
 		earned = null;
 	}

@@ -306,13 +306,12 @@ the arrow, confetti and splash.
     committing sixty-odd clips -- it all lands in the install-time precache.
   - **Licensing, checked:** `edge-tts` drives Edge's Read Aloud endpoint, which
     Microsoft does not document as a public API and publishes no redistribution
-    grant for. So the clips are **not committed** -- `static/sounds/voice/` is
-    gitignored and the script regenerates them on demand. See `CREDITS.md`. To
-    ship them: settle it with Microsoft, move to Azure Speech on a paid
-    subscription, or record a real child.
-  - **Still to settle:** when it speaks. Letter name on entering a glyph, the
-    word on completion, or both -- a judgement call, and it must not talk over
-    the cheer.
+    grant for. The phrase clips are committed anyway, at the owner's direction,
+    because the PWA has to carry them to work offline. `CREDITS.md` records the
+    position and the ways out of it.
+  - **When it speaks: on opening a glyph**, "A is for apple", upper and lower
+    case sharing one clip. It waits for the cheer to finish first -- letters
+    arrive on a celebration now that finishing one opens the next.
   - The letter clips feed each letter to the engine as an isolated capital and
     trust it to read the letter's name. That is an assumption about a speech
     engine, so `LETTER_TEXT` in the script lists all 26 explicitly and any that
