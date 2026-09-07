@@ -10,7 +10,7 @@ import { base } from '$app/paths';
 export type Cue = 'cheer' | 'sad';
 
 const FILES: Record<Cue, string> = {
-	cheer: 'cheer.mp3',
+	cheer: 'yay.mp3',
 	sad: 'sad-trombone.mp3'
 };
 
