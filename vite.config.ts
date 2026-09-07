@@ -10,7 +10,16 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			// GitHub Pages serves the app from /<repo>, so the CI build sets
+			// BASE_PATH. Local builds and dev stay at the root.
+			paths: {
+				base: process.env.BASE_PATH ?? '',
+				// Absolute, not relative: the sound module builds URLs at runtime from
+				// `base`, and relative asset paths make that resolve against whichever
+				// route is open rather than the app root.
+				relative: false
+			}
 		})
 	],
 	test: {
