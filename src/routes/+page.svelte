@@ -53,10 +53,10 @@
 		index = i;
 		earned = null;
 		view = 'trace';
-		// Announce the letter on arrival. When this came from an auto-advance the
-		// cheer is still ringing, and `speak` waits it out rather than shouting
-		// over it. Letters with no clip recorded yet stay quiet.
-		speak(chars[i] ?? '');
+		// Announce the letter on arrival -- but never across a celebration, which
+		// is what `speak` checks, so an auto-advanced letter stays quiet. Letters
+		// with no clip recorded yet stay quiet too, as does a muted app.
+		if (!progress.data.muted) speak(chars[i] ?? '');
 		if (wasGrid) history.pushState({ lt: 'trace' }, '');
 	}
 
