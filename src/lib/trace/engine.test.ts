@@ -3,6 +3,8 @@ import {
 	advance,
 	findStart,
 	findStarts,
+	liftIndex,
+	completeIndex,
 	nearest,
 	resolveStart,
 	scoreLetter,
@@ -154,5 +156,18 @@ describe('scoreLetter', () => {
 
 	it('never scores zero, however messy the attempt', () => {
 		expect(scoreLetter([2, 1, 0], 2, 4, 20)).toBe(1);
+	});
+});
+
+describe('finishing thresholds', () => {
+	it('finishes under the finger a little short of the end', () => {
+		const s = line(); // 101 points, so index 100 is the end
+		expect(completeIndex(s)).toBeCloseTo(88);
+	});
+
+	it('accepts a lift at three quarters, which 90% of a stem comfortably clears', () => {
+		const s = line();
+		expect(liftIndex(s)).toBeCloseTo(75);
+		expect(90).toBeGreaterThanOrEqual(liftIndex(s));
 	});
 });

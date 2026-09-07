@@ -20,6 +20,7 @@
 		advance,
 		completeIndex,
 		findStarts,
+		liftIndex,
 		nearest,
 		ptAt,
 		resolveStart,
@@ -210,6 +211,11 @@
 			return;
 		}
 		if (!attempt) return;
+		const s = samples[attempt.index];
+		// Lifting near the end finishes the stroke rather than discarding it.
+		if (s && !s.isDot && attempt.progress >= liftIndex(s)) {
+			return finish(attempt.index, attempt.dir, attempt.progress);
+		}
 		// A stroke genuinely begun and then let go of is the "extra stroke" that
 		// costs a star. A stray tap that never moved is forgiven.
 		if (attempt.progress > 2) extras++;

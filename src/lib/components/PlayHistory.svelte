@@ -31,6 +31,7 @@
 		<b>{progress.todayStars}</b> today
 		{#if streak > 1}<span>&middot; {streak} days in a row</span>{/if}
 	</p>
+	<p class="caption">last 4 weeks</p>
 	<div class="grid">
 		{#each days as d (d.key)}
 			<i
@@ -48,7 +49,14 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
+	}
+	.caption {
+		margin: 0;
+		font-size: 11px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #a89fb0;
 	}
 	.line {
 		margin: 0;

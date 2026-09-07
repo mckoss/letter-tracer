@@ -42,8 +42,16 @@ export const TOLERANCE = 11;
 export const START_RADIUS = 13;
 /** How far ahead of the current position a move may jump, as a fraction. */
 export const LOOKAHEAD = 0.22;
-/** A stroke counts as finished a little short of the end. */
-export const COMPLETE_AT = 0.92;
+/** A stroke completes this far along while the finger is still down. */
+export const COMPLETE_AT = 0.88;
+
+/**
+ * And more generously still the moment the finger lifts. A child who has drawn
+ * three quarters of a stroke has made the movement; refusing it there is
+ * baffling -- and it used to cost a star as well, since an abandoned stroke
+ * counts as an extra attempt.
+ */
+export const FINISH_ON_LIFT = 0.75;
 
 /**
  * How far the finger must travel before an ambiguous start is settled. Strokes
@@ -179,9 +187,14 @@ export function advance(s: StrokeSample, a: Attempt, p: Pt, tolerance = TOLERANC
 	return m.dist <= tolerance ? m.index : a.progress;
 }
 
-/** Progress at which a stroke is considered complete. */
+/** Progress at which a stroke is considered complete under the finger. */
 export function completeIndex(s: StrokeSample): number {
 	return (s.pts.length - 1) * COMPLETE_AT;
+}
+
+/** Progress at which lifting the finger still finishes the stroke. */
+export function liftIndex(s: StrokeSample): number {
+	return (s.pts.length - 1) * FINISH_ON_LIFT;
 }
 
 /** How closely the finger followed the guide, averaged over the whole letter. */
