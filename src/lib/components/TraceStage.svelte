@@ -16,12 +16,15 @@
 	import { samplePoints, strokeInfo } from '$lib/glyphs/measure';
 	import {
 		DEVIATION_CLAMP,
+		RESOLVE_DISTANCE,
 		advance,
 		completeIndex,
-		findStart,
+		findStarts,
 		nearest,
+		resolveStart,
 		scoreLetter,
 		type Attempt,
+		type Candidate,
 		type Pt,
 		type Stars,
 		type StrokeSample
@@ -43,6 +46,9 @@
 	let devSum = $state(0);
 	let devCount = $state(0);
 	let attempt = $state<Attempt | null>(null);
+	/** Readings of the touch still in play, until the finger says which is meant. */
+	let pending = $state<Candidate[] | null>(null);
+	let origin = $state<Pt | null>(null);
 	let result = $state<Stars | null>(null);
 	let nudge = $state(false);
 
@@ -62,6 +68,8 @@
 		devSum = 0;
 		devCount = 0;
 		attempt = null;
+		pending = null;
+		origin = null;
 		result = null;
 	});
 
@@ -86,6 +94,7 @@
 		completed.push(i);
 		if (dir === -1) reversals++;
 		attempt = null;
+		pending = null;
 		if (!done.every(Boolean)) return;
 		const stars = scoreLetter(completed, reversals, extras, devCount ? devSum / devCount : 0);
 		result = stars;
@@ -95,8 +104,8 @@
 	function onDown(e: PointerEvent) {
 		if (result !== null) return;
 		const p = local(e);
-		const hit = findStart(samples, done, p);
-		if (!hit) {
+		const hits = findStarts(samples, done, p);
+		if (!hits.length) {
 			nudge = true;
 			setTimeout(() => (nudge = false), 420);
 			return;
@@ -106,19 +115,42 @@
 		} catch {
 			// No active pointer to capture (synthetic events); tracking still works.
 		}
+		const first = hits[0];
 		// The tittle on i and j is a tap, not a drag.
-		if (samples[hit.index].isDot) {
-			trails[hit.index] = [samples[hit.index].pts[0]];
-			return finish(hit.index, 1);
+		if (samples[first.index].isDot) {
+			trails[first.index] = [samples[first.index].pts[0]];
+			return finish(first.index, 1);
 		}
-		trails[hit.index] = [p];
-		attempt = { index: hit.index, dir: hit.dir, progress: 0 };
+		trails[first.index] = [p];
+		attempt = { index: first.index, dir: first.dir, progress: 0 };
+		// Strokes meet end to end all over the alphabet, so hold the other
+		// readings open until the finger has moved far enough to say which.
+		pending = hits.length > 1 ? hits : null;
+		origin = p;
 	}
 
 	function onMove(e: PointerEvent) {
 		if (!attempt) return;
-		const s = samples[attempt.index];
 		const p = local(e);
+
+		if (pending && origin) {
+			if (Math.hypot(p.x - origin.x, p.y - origin.y) < RESOLVE_DISTANCE) {
+				// Too early to tell which stroke is meant. Draw the line, but do not
+				// score or advance against a guess that may be about to change.
+				trails[attempt.index].push(p);
+				return;
+			}
+			const chosen = resolveStart(samples, pending, origin, p);
+			if (chosen.index !== attempt.index) {
+				trails[chosen.index] = trails[attempt.index];
+				trails[attempt.index] = [];
+			}
+			attempt.index = chosen.index;
+			attempt.dir = chosen.dir;
+			pending = null;
+		}
+
+		const s = samples[attempt.index];
 		const m = nearest(s, attempt, p);
 
 		// Accuracy is judged on every sample, including the ones that strayed past
@@ -142,6 +174,7 @@
 		if (attempt.progress > 2) extras++;
 		trails[attempt.index] = [];
 		attempt = null;
+		pending = null;
 	}
 
 	const points = (t: Pt[]) => t.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');

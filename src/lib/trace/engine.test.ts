@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
 	advance,
 	findStart,
+	findStarts,
 	nearest,
+	resolveStart,
 	scoreLetter,
 	tidiness,
 	ptAt,
@@ -41,6 +43,44 @@ describe('findStart', () => {
 
 	it('ignores a touch nowhere near a start point', () => {
 		expect(findStart([line()], [false], { x: 50, y: 60 })).toBeNull();
+	});
+});
+
+describe('resolveStart', () => {
+	/** Two strokes meeting at a point, as the upper and lower legs of K do. */
+	const seg = (x0: number, y0: number, x1: number, y1: number): StrokeSample => {
+		const n = 41;
+		return {
+			pts: Array.from({ length: n }, (_, i) => ({
+				x: x0 + ((x1 - x0) * i) / (n - 1),
+				y: y0 + ((y1 - y0) * i) / (n - 1)
+			})),
+			length: Math.hypot(x1 - x0, y1 - y0),
+			isDot: false
+		};
+	};
+	// K, once the stem is done: the upper leg ENDS where the lower leg BEGINS.
+	const upperLeg = seg(74, 10, 26, 62);
+	const lowerLeg = seg(26, 62, 76, 110);
+	const kLegs = [upperLeg, lowerLeg];
+	const junction = { x: 26, y: 62 };
+
+	it('sees both readings of a touch on a junction', () => {
+		const hits = findStarts(kLegs, [false, false], junction);
+		expect(hits).toContainEqual({ index: 0, dir: -1 });
+		expect(hits).toContainEqual({ index: 1, dir: 1 });
+	});
+
+	it('picks the lower leg when the finger heads down and right', () => {
+		const hits = findStarts(kLegs, [false, false], junction);
+		const got = resolveStart(kLegs, hits, junction, { x: 32, y: 68 });
+		expect(got).toEqual({ index: 1, dir: 1 });
+	});
+
+	it('picks the upper leg backwards when the finger heads up and right', () => {
+		const hits = findStarts(kLegs, [false, false], junction);
+		const got = resolveStart(kLegs, hits, junction, { x: 32, y: 55 });
+		expect(got).toEqual({ index: 0, dir: -1 });
 	});
 });
 
