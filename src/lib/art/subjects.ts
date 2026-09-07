@@ -10,6 +10,23 @@ import type { Prim } from './render';
 
 export type Subject = () => Prim[];
 
+/**
+ * Short strokes laid tangentially around an ellipse: the woven strands of a
+ * nest rim, seen from above. Deterministic, so a picture is the same every time
+ * it is drawn -- `k` only varies the depth each strand sits at.
+ */
+const weave = (cx: number, cy: number, rx: number, ry: number, n: number, arc = 0.62): string => {
+	const parts: string[] = [];
+	for (let i = 0; i < n; i++) {
+		const t = (i / n) * Math.PI * 2;
+		const k = 1 + 0.075 * Math.sin(i * 2.7);
+		const at = (u: number, g: number) =>
+			`${(cx + rx * k * g * Math.cos(u)).toFixed(1)} ${(cy + ry * k * g * Math.sin(u)).toFixed(1)}`;
+		parts.push(`M${at(t - arc / 2, 1)} Q${at(t, 1.09)} ${at(t + arc / 2, 1)}`);
+	}
+	return parts.join(' ');
+};
+
 const eye = (cx: number, cy: number, r = 6.5): Prim[] => [
 	{ k: 'circle', o: { cx, cy, r }, fill: P.dark },
 	{ k: 'circle', o: { cx: cx + r * 0.36, cy: cy - r * 0.36, r: r * 0.34 }, fill: P.white }
@@ -320,21 +337,34 @@ export const SUBJECTS: Record<string, Subject> = {
 		{ k: 'path', d: 'M176 96 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3 Z', fill: P.cream }
 	],
 
+	// Looking down into the nest: a woven rim of twigs, a dark hollow, and three
+	// pale blue eggs settled into it.
 	nest: () => [
-		{ k: 'ellipse', o: { cx: 72, cy: 108, rx: 23, ry: 27, rot: -12 }, fill: P.cream, shade: true },
-		{ k: 'ellipse', o: { cx: 128, cy: 108, rx: 23, ry: 27, rot: 12 }, fill: P.cream, shade: true },
-		{ k: 'ellipse', o: { cx: 100, cy: 96, rx: 23, ry: 27 }, fill: P.white, shade: true },
-		{
-			k: 'path',
-			d: 'M20 110 C 30 184, 170 184, 180 110 C 158 138, 42 138, 20 110 Z',
-			fill: P.brown,
-			shade: true
-		},
+		{ k: 'ellipse', o: { cx: 100, cy: 112, rx: 76, ry: 62 }, fill: P.tan, shade: true },
+		{ k: 'line', d: weave(100, 112, 74, 60, 17), color: P.brown, w: 5, cap: 'round' },
+		{ k: 'line', d: weave(100, 112, 62, 49, 13, 0.78), color: P.sand, w: 4.5, cap: 'round' },
+		// The hollow. Two rings rather than one, so the cup has a visible depth.
+		{ k: 'ellipse', o: { cx: 100, cy: 113, rx: 52, ry: 41 }, fill: P.brown, shade: true },
+		{ k: 'ellipse', o: { cx: 100, cy: 116, rx: 45, ry: 34 }, fill: P.dark, shade: true, op: 0.55 },
+		// Three eggs, nestled: the two behind sit higher, the front one overlaps.
+		{ k: 'ellipse', o: { cx: 82, cy: 102, rx: 21, ry: 16, rot: -26 }, fill: P.sky, shade: true },
+		{ k: 'ellipse', o: { cx: 119, cy: 101, rx: 21, ry: 16, rot: 24 }, fill: P.sky, shade: true },
+		{ k: 'ellipse', o: { cx: 100, cy: 124, rx: 22, ry: 16, rot: -6 }, fill: P.sky, shade: true },
 		{
 			k: 'line',
-			d: 'M28 128 C 70 154, 130 154, 172 128 M36 148 C 74 168, 126 168, 164 148 M46 164 C 76 178, 124 178, 154 164',
+			d: 'M76 99 L76.4 99 M87 96 L87.4 96 M80 108 L80.4 108 M90 105 L90.4 105 M113 96 L113.4 96 M124 99 L124.4 99 M118 106 L118.4 106 M126 104 L126.4 104 M94 121 L94.4 121 M104 118 L104.4 118 M108 128 L108.4 128 M96 130 L96.4 130',
 			color: P.tan,
-			w: 4.5
+			w: 3.4,
+			cap: 'round'
+		},
+		// A few strands crossing the rim, so it reads as woven rather than as a
+		// bowl with a pattern printed on it.
+		{
+			k: 'line',
+			d: 'M26 124 C 44 112, 52 100, 46 86 M174 124 C 156 112, 148 100, 154 86 M62 168 C 78 160, 96 158, 112 162',
+			color: P.brown,
+			w: 5,
+			cap: 'round'
 		}
 	],
 
@@ -447,30 +477,56 @@ export const SUBJECTS: Record<string, Subject> = {
 		{ k: 'circle', o: { cx: 108, cy: 26, r: 6 }, fill: P.tan }
 	],
 
+	// A baleen whale in profile, facing left: blunt head, horizontal flukes, a
+	// pleated pale belly and a spout. The old one was a fish -- upright tail fin,
+	// no flukes, no blow.
 	whale: () => [
+		// The blow, drawn first so it sits behind the head.
 		{
 			k: 'line',
-			d: 'M60 62 C 56 42, 66 34, 76 32 M60 62 C 74 50, 88 52, 94 40',
-			color: P.blue,
-			w: 7
+			d: 'M62 66 C 54 48, 50 36, 52 24 M68 64 C 72 48, 82 38, 94 32 M64 60 C 62 48, 62 40, 64 34',
+			color: P.sky,
+			w: 6,
+			cap: 'round'
 		},
-		{ k: 'path', d: 'M168 92 L188 68 L186 140 L164 122 Z', fill: P.navy, shade: true },
-		{ k: 'ellipse', o: { cx: 96, cy: 118, rx: 70, ry: 46 }, fill: P.blue, shade: true },
+		// Flukes: two lobes either side of the peduncle, notched in the middle.
 		{
 			k: 'path',
-			d: 'M40 130 C 66 158, 132 158, 156 130 C 132 152, 66 152, 40 130 Z',
+			d: 'M138 108 C 156 92, 176 80, 194 76 C 184 92, 168 104, 154 112 C 168 118, 182 130, 194 148 C 174 142, 154 128, 138 118 Z',
+			fill: P.navy,
+			shade: true
+		},
+		{
+			k: 'path',
+			d: 'M28 116 C 28 90, 52 70, 88 70 C 122 70, 144 88, 152 110 C 146 134, 120 154, 84 154 C 50 154, 28 140, 28 116 Z',
+			fill: P.blue,
+			shade: true
+		},
+		// Pale underside, and the throat grooves every rorqual has.
+		{
+			k: 'path',
+			d: 'M30 124 C 44 148, 96 158, 138 128 C 116 152, 56 156, 30 124 Z',
 			fill: P.white,
 			shade: true,
 			soft: true
 		},
 		{
-			k: 'ellipse',
-			o: { cx: 100, cy: 140, rx: 26, ry: 14, rot: -8 },
-			fill: P.navy,
-			shade: true,
-			soft: true
+			k: 'line',
+			d: 'M44 132 C 46 140, 48 145, 50 148 M58 139 C 59 146, 60 150, 61 152 M72 143 C 73 149, 74 152, 75 154 M86 145 C 87 150, 87 152, 88 154',
+			color: P.blue,
+			w: 2.6,
+			cap: 'round'
 		},
-		...eye(54, 104, 7)
+		// Mouth line, running back from the snout under the eye.
+		{ k: 'line', d: 'M27 118 C 44 134, 72 140, 98 132', color: P.navy, w: 4.5, cap: 'round' },
+		// Near pectoral fin, over the body.
+		{
+			k: 'ellipse',
+			o: { cx: 88, cy: 144, rx: 28, ry: 11, rot: 24 },
+			fill: P.navy,
+			shade: true
+		},
+		...eye(48, 112, 6)
 	],
 
 	xylophone: () => [
@@ -490,34 +546,101 @@ export const SUBJECTS: Record<string, Subject> = {
 		{ k: 'circle', o: { cx: 148, cy: 114, r: 11 }, fill: P.slate, shade: true }
 	],
 
+	// Hanging on its string, turned just enough to show both halves and the gap
+	// between them. Drawn dead-on and concentric, as it was, a yo-yo is a target.
 	yoyo: () => [
-		{ k: 'line', d: 'M100 24 L100 74', color: P.cream, w: 4 },
-		{ k: 'circle', o: { cx: 100, cy: 122, r: 60 }, fill: P.red, shade: true },
-		{ k: 'circle', o: { cx: 100, cy: 122, r: 34 }, fill: P.cream, shade: true, soft: true },
-		{ k: 'circle', o: { cx: 100, cy: 122, r: 14 }, fill: P.rust, shade: true, soft: true }
+		{ k: 'line', d: 'M98 30 C 90 30, 90 16, 98 16 C 106 16, 106 30, 98 30 Z', color: P.tan, w: 4 },
+		{ k: 'line', d: 'M98 30 C 97 46, 95 58, 94 74', color: P.tan, w: 4, cap: 'round' },
+		// Far half, offset so a crescent of it shows past the near one.
+		{ k: 'circle', o: { cx: 80, cy: 128, r: 54 }, fill: P.rust, shade: true },
+		// The axle gap, with the wound string sitting in it.
+		{ k: 'ellipse', o: { cx: 94, cy: 127, rx: 44, ry: 53, rot: 5 }, fill: P.white, shade: true },
+		{ k: 'circle', o: { cx: 110, cy: 124, r: 54 }, fill: P.red, shade: true },
+		// Moulded cap and axle on the near face.
+		{ k: 'circle', o: { cx: 110, cy: 124, r: 19 }, fill: P.cream, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 110, cy: 124, r: 7 }, fill: P.rust, shade: true, soft: true }
 	],
 
+	// A zebra's head is long and tapers to a black muzzle, and its stripes are
+	// broad curved bands that follow it. The old one was a white oval with seven
+	// straight dashes scattered over it.
 	zebra: () => [
-		{ k: 'path', d: 'M64 54 L56 24 L86 42 Z', fill: P.white, shade: true },
-		{ k: 'path', d: 'M136 54 L144 24 L114 42 Z', fill: P.white, shade: true },
-		{ k: 'ellipse', o: { cx: 100, cy: 106, rx: 46, ry: 60 }, fill: P.white, shade: true },
+		// Ears, behind the head so they tuck in at the base.
 		{
-			k: 'line',
-			d: 'M72 62 L84 82 M100 52 L100 78 M128 62 L116 82 M60 96 L82 100 M140 96 L118 100 M64 128 L86 122 M136 128 L114 122',
-			color: P.dark,
-			w: 7
+			k: 'path',
+			d: 'M70 56 C 58 38, 54 22, 62 19 C 72 16, 84 34, 86 50 Z',
+			fill: P.white,
+			shade: true
 		},
 		{
-			k: 'ellipse',
-			o: { cx: 100, cy: 154, rx: 24, ry: 18 },
-			fill: P.slate,
+			k: 'path',
+			d: 'M130 56 C 142 38, 146 22, 138 19 C 128 16, 116 34, 114 50 Z',
+			fill: P.white,
+			shade: true
+		},
+		{
+			k: 'path',
+			d: 'M72 52 C 65 39, 62 28, 66 26 C 72 24, 79 37, 81 48 Z',
+			fill: P.pink,
 			shade: true,
 			soft: true
 		},
-		{ k: 'ellipse', o: { cx: 92, cy: 150, rx: 4, ry: 5 }, fill: P.dark },
-		{ k: 'ellipse', o: { cx: 108, cy: 150, rx: 4, ry: 5 }, fill: P.dark },
-		...eye(80, 104, 7),
-		...eye(120, 104, 7)
+		{
+			k: 'path',
+			d: 'M128 52 C 135 39, 138 28, 134 26 C 128 24, 121 37, 119 48 Z',
+			fill: P.pink,
+			shade: true,
+			soft: true
+		},
+		// Head: wide at the brow, tapering to the muzzle.
+		{
+			k: 'path',
+			d: 'M100 38 C 130 38, 146 60, 146 90 C 146 116, 134 140, 124 158 C 116 172, 84 172, 76 158 C 66 140, 54 116, 54 90 C 54 60, 70 38, 100 38 Z',
+			fill: P.white,
+			shade: true
+		},
+		// Mane: a spiky crest between the ears.
+		{
+			k: 'path',
+			d: 'M78 56 L82 34 L89 52 L95 30 L101 50 L107 30 L113 52 L120 34 L124 56 C 114 46, 88 46, 78 56 Z',
+			fill: P.dark,
+			shade: true,
+			soft: true
+		},
+		// Stripes: down the forehead, then curving out around the cheeks.
+		{
+			k: 'line',
+			d: 'M87 60 C 84 72, 84 84, 87 96 M100 58 C 100 72, 100 86, 100 98 M113 60 C 116 72, 116 84, 113 96',
+			color: P.dark,
+			w: 7.5,
+			cap: 'round'
+		},
+		{
+			k: 'line',
+			d: 'M57 74 C 66 76, 74 80, 80 86 M55 96 C 65 97, 73 100, 79 105 M60 120 C 68 121, 74 124, 79 129 M68 140 C 74 142, 78 145, 82 149',
+			color: P.dark,
+			w: 8,
+			cap: 'round'
+		},
+		{
+			k: 'line',
+			d: 'M143 74 C 134 76, 126 80, 120 86 M145 96 C 135 97, 127 100, 121 105 M140 120 C 132 121, 126 124, 121 129 M132 140 C 126 142, 122 145, 118 149',
+			color: P.dark,
+			w: 8,
+			cap: 'round'
+		},
+		// Muzzle.
+		{
+			k: 'ellipse',
+			o: { cx: 100, cy: 150, rx: 24, ry: 16 },
+			fill: P.dark,
+			shade: true,
+			soft: true
+		},
+		{ k: 'ellipse', o: { cx: 91, cy: 147, rx: 4.5, ry: 6, rot: -14 }, fill: P.slate },
+		{ k: 'ellipse', o: { cx: 109, cy: 147, rx: 4.5, ry: 6, rot: 14 }, fill: P.slate },
+		...eye(76, 88, 7.5),
+		...eye(124, 88, 7.5)
 	]
 };
 
