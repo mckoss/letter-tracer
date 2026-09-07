@@ -14,9 +14,12 @@
 		weight = 9
 	}: { text: string; height?: number; color?: string; weight?: number } = $props();
 
-	/** Side bearing and word space, in glyph user units. */
-	const SIDE = 5;
-	const SPACE = 26;
+	// Side bearing and word space, in glyph user units. Bearings are measured
+	// from the *stroked* edge, not the path geometry: a monoline glyph paints
+	// weight/2 beyond its bounding box on each side, so spacing off the raw box
+	// leaves neighbouring letters all but touching.
+	const SIDE = 7;
+	const SPACE = 24;
 
 	const layout = $derived.by(() => {
 		const items: { strokes: string[]; x: number }[] = [];
@@ -32,8 +35,8 @@
 			const strokes = SETS.upper[ch] ?? SETS.lower[ch] ?? SETS.digits[ch];
 			if (!strokes) continue;
 			const e = glyphExtents(strokes);
-			items.push({ strokes, x: x + SIDE - e.x0 });
-			x += e.x1 - e.x0 + SIDE * 2;
+			items.push({ strokes, x: x + SIDE + weight / 2 - e.x0 });
+			x += e.x1 - e.x0 + weight + SIDE * 2;
 			y0 = Math.min(y0, e.y0);
 			y1 = Math.max(y1, e.y1);
 		}

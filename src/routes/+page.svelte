@@ -5,6 +5,7 @@
 	import { ORDER, SETS, SET_LABELS, type StrokeSet } from '$lib/glyphs/data';
 	import { progress } from '$lib/progress.svelte';
 	import { wordFor } from '$lib/words';
+	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import TraceStage from '$lib/components/TraceStage.svelte';
@@ -20,6 +21,7 @@
 	let index = $state(0);
 	let playAll = $state(false);
 	let earned = $state<StarCount | null>(null);
+	let confetti: Confetti | undefined = $state();
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
@@ -34,6 +36,8 @@
 
 	function done(stars: StarCount) {
 		progress.record(char, stars);
+		// Everyone gets a burst; how big it is says how the letter went.
+		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
 		earned = stars;
 		if (playAll && index < chars.length - 1) {
 			index += 1;
@@ -66,6 +70,8 @@
 </script>
 
 <svelte:head><title>Letter Tracer</title></svelte:head>
+
+<Confetti bind:this={confetti} />
 
 <div class="app" class:tracing={view === 'trace'}>
 	<header>

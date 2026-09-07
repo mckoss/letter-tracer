@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { advance, findStart, scoreLetter, ptAt, type StrokeSample } from './engine';
+import {
+	advance,
+	findStart,
+	nearest,
+	scoreLetter,
+	tidiness,
+	ptAt,
+	type StrokeSample
+} from './engine';
 
 /** A horizontal stroke from (0,0) to (100,0), sampled every unit. */
 const line = (): StrokeSample => ({
@@ -63,24 +71,48 @@ describe('advance', () => {
 	});
 });
 
+describe('nearest', () => {
+	it('reports how far off the guide the finger is', () => {
+		const s = line();
+		const m = nearest(s, { index: 0, dir: 1, progress: 0 }, { x: 4, y: 3 });
+		expect(m).toEqual({ index: 4, dist: 3 });
+	});
+});
+
+describe('tidiness', () => {
+	it('bands the mean deviation', () => {
+		expect(tidiness(1)).toBe('neat');
+		expect(tidiness(5)).toBe('ok');
+		expect(tidiness(12)).toBe('loose');
+	});
+});
+
 describe('scoreLetter', () => {
-	it('gives three stars for the taught order and direction', () => {
-		expect(scoreLetter([0, 1, 2], 0, 0)).toBe(3);
+	it('gives three stars for a neat trace in the taught order', () => {
+		expect(scoreLetter([0, 1, 2], 0, 0, 2)).toBe(3);
 	});
 
 	it('gives two stars for every stroke drawn out of order', () => {
-		expect(scoreLetter([2, 0, 1], 0, 0)).toBe(2);
+		expect(scoreLetter([2, 0, 1], 0, 0, 2)).toBe(2);
 	});
 
 	it('gives two stars for a stroke drawn backwards', () => {
-		expect(scoreLetter([0, 1, 2], 1, 0)).toBe(2);
+		expect(scoreLetter([0, 1, 2], 1, 0, 2)).toBe(2);
+	});
+
+	it('drops a neat, correctly ordered letter to two stars if it wandered', () => {
+		expect(scoreLetter([0, 1, 2], 0, 0, 5)).toBe(2);
+	});
+
+	it('gives one star for a badly wandering line, however good the order', () => {
+		expect(scoreLetter([0, 1, 2], 0, 0, 14)).toBe(1);
 	});
 
 	it('gives one star when extra stroke attempts were needed', () => {
-		expect(scoreLetter([0, 1, 2], 0, 1)).toBe(1);
+		expect(scoreLetter([0, 1, 2], 0, 1, 1)).toBe(1);
 	});
 
 	it('never scores zero, however messy the attempt', () => {
-		expect(scoreLetter([2, 1, 0], 2, 4)).toBe(1);
+		expect(scoreLetter([2, 1, 0], 2, 4, 20)).toBe(1);
 	});
 });

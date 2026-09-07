@@ -42,6 +42,17 @@ export const LOOKAHEAD = 0.22;
 /** A stroke counts as finished a little short of the end. */
 export const COMPLETE_AT = 0.92;
 
+/**
+ * Mean distance from the guide, in user units, that separates the tidiness
+ * bands. TOLERANCE is only the gate for "still on this stroke"; these are what
+ * the child is actually judged on, so wandering inside the tolerance band still
+ * costs a star.
+ */
+export const NEAT = 3.5;
+export const OK = 7;
+/** One wild excursion should cost a star, not wreck the average outright. */
+export const DEVIATION_CLAMP = 25;
+
 const d2 = (a: Pt, b: Pt) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
 
 /** The i-th point along the direction being drawn. */
@@ -77,28 +88,33 @@ export function findStart(
 }
 
 /**
- * New progress for a finger at `p`. Never goes backwards: straying off the path
- * holds position rather than failing, so a child can wander and come back.
- *
- * Takes the *nearest* point within tolerance, not the furthest -- the furthest
- * puts the head of the ink up to a whole tolerance radius ahead of the finger,
- * which reads as the letter drawing itself. The look-ahead window, not the
- * choice of point, is what stops a fast drag from being left behind.
+ * The point on the stroke nearest the finger, searching only forward from where
+ * the child has already got to. `dist` is how far off the guide they are, which
+ * is what the accuracy score is built from.
  */
-export function advance(s: StrokeSample, a: Attempt, p: Pt, tolerance = TOLERANCE): number {
+export function nearest(s: StrokeSample, a: Attempt, p: Pt): { index: number; dist: number } {
 	const n = s.pts.length;
 	const end = Math.min(n - 1, a.progress + Math.max(2, Math.ceil(n * LOOKAHEAD)));
-	const tol2 = tolerance ** 2;
-	let found = a.progress;
+	let index = a.progress;
 	let best = Infinity;
 	for (let i = a.progress; i <= end; i++) {
 		const dd = d2(ptAt(s, a.dir, i), p);
-		if (dd <= tol2 && dd < best) {
+		if (dd < best) {
 			best = dd;
-			found = i;
+			index = i;
 		}
 	}
-	return found;
+	return { index, dist: Math.sqrt(best) };
+}
+
+/**
+ * New progress for a finger at `p`. Never goes backwards: straying past the
+ * tolerance holds position rather than failing, so a child can wander and come
+ * back. The look-ahead window is what stops a fast drag from being left behind.
+ */
+export function advance(s: StrokeSample, a: Attempt, p: Pt, tolerance = TOLERANCE): number {
+	const m = nearest(s, a, p);
+	return m.dist <= tolerance ? m.index : a.progress;
 }
 
 /** Progress at which a stroke is considered complete. */
@@ -106,20 +122,36 @@ export function completeIndex(s: StrokeSample): number {
 	return (s.pts.length - 1) * COMPLETE_AT;
 }
 
+/** How closely the finger followed the guide, averaged over the whole letter. */
+export type Tidiness = 'neat' | 'ok' | 'loose';
+
+export function tidiness(meanDeviation: number): Tidiness {
+	if (meanDeviation <= NEAT) return 'neat';
+	if (meanDeviation <= OK) return 'ok';
+	return 'loose';
+}
+
 /**
  * Rating for a finished letter. Every letter that gets finished scores at least
  * one star -- a child never loses a letter for poor form, only some applause.
  *
- *   3  every stroke, taught order, taught direction, no false starts
- *   2  every stroke, but out of order or with one drawn backwards
- *   1  finished, but it took extra stroke attempts to get there
+ *   3  every stroke, taught order and direction, no false starts, neatly traced
+ *   2  out of order, or one drawn backwards, or only roughly on the line
+ *   1  it took extra stroke attempts, or the line was wandered off badly
  *
  * `extras` counts abandoned attempts: strokes begun and then let go of before
  * they were finished. Those are what "an additional stroke" looks like from
  * inside the engine, since a completed stroke is never re-armed.
  */
-export function scoreLetter(order: number[], reversals: number, extras: number): Stars {
-	if (extras > 0) return 1;
+export function scoreLetter(
+	order: number[],
+	reversals: number,
+	extras: number,
+	meanDeviation: number
+): Stars {
+	const tidy = tidiness(meanDeviation);
+	if (extras > 0 || tidy === 'loose') return 1;
 	const inOrder = order.every((v, i) => v === i);
-	return inOrder && reversals === 0 ? 3 : 2;
+	if (!inOrder || reversals > 0 || tidy === 'ok') return 2;
+	return 3;
 }

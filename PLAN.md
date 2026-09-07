@@ -109,8 +109,10 @@ Per armed stroke:
    for the sample nearest the finger. Within `tolerance` → advance `progress`.
    Finger strays wide → **hold** progress rather than failing. Toddler-forgiving:
    you can wander off and come back.
-4. Ink reveal is `stroke-dashoffset = total * (1 - progress/n)` on a colored
-   copy of the path — GPU-composited, no per-frame redraw of geometry.
+4. The ink is the child's **raw finger trail**, not the guide path revealed.
+   Snapping the ink to the guide makes the letter draw itself perfectly however
+   sloppy the finger was, which teaches nothing; drawing the real trail shows
+   the child their own line and lets the score measure how close it ran.
 5. Stroke completes at ≥92% progress → pop animation, arrow moves on.
 6. `pointerup` early → gentle rewind to the start, retry.
 
