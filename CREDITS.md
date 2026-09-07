@@ -20,11 +20,14 @@ community wrapper around an endpoint Microsoft does not document as a public
 API. Microsoft publishes no grant of redistribution rights for that output, and
 the endpoint is nominally there to serve Edge's own reader.
 
-So the generated clips are **not committed**: `static/sounds/voice/` is
-gitignored, and anyone who wants the prompts runs the script themselves. If the
-prompts are ever to ship in this repository, either settle the licensing with
-Microsoft in writing, move to a service whose terms allow redistribution
-(Azure Speech under a paid subscription does), or record a real child.
+The spoken prompts under `static/sounds/voice/phrase/` **are committed**, at the
+project owner's direction: the app plays them and the PWA precaches them, so
+they have to ship with it. That is a decision made with the above known, not an
+oversight. If it needs undoing later, the alternatives are to settle the
+licensing with Microsoft in writing, move to a service whose terms allow
+redistribution (Azure Speech under a paid subscription does), or record a real
+child -- the last of which needs no permission from anybody and would sound
+better.
 
 ## Artwork
 

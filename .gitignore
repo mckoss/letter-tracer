@@ -25,8 +25,8 @@ vite.config.ts.timestamp-*
 # Python venv for scripts/
 .venv/
 
-# Voice clips from scripts/generate_tts.py. Generated, not committed: the
-# service edge-tts drives is Edge's Read Aloud feature, which Microsoft neither
-# documents as a public API nor grants redistribution rights for. Run the script
-# to make your own; drop this line once the licensing is settled.
-static/sounds/voice/
+# Voice clips from scripts/generate_tts.py. The spoken "A is for apple" prompts
+# under voice/phrase/ ARE committed -- the app plays them and the PWA precaches
+# them, so they have to ship. Everything else the script can make is scratch.
+static/sounds/voice/*
+!static/sounds/voice/phrase/
