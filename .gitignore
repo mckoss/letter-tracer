@@ -22,6 +22,9 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Python venv for scripts/
+.venv/
+
 # Voice clips from scripts/generate_tts.py. Generated, not committed: the
 # service edge-tts drives is Edge's Read Aloud feature, which Microsoft neither
 # documents as a public API nor grants redistribution rights for. Run the script
