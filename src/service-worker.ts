@@ -12,6 +12,13 @@ declare const self: ServiceWorkerGlobalScope;
 const CACHE = `letter-tracer-${version}`;
 
 /**
+ * How long to wait for a fresh page before falling back to the cache. Long
+ * enough for a slow phone connection, short enough that launching with no
+ * signal still feels instant.
+ */
+const NAV_TIMEOUT = 2500;
+
+/**
  * `build` is the compiled app, `files` is everything in static/, and
  * `prerendered` is the HTML for each route. Without the last of those the app
  * loads offline but every page but the entry one 404s.
@@ -54,7 +61,17 @@ self.addEventListener('fetch', (event) => {
 			// The cache stays the offline fallback.
 			if (request.mode === 'navigate') {
 				try {
-					const fresh = await fetch(request);
+					// `cache: 'reload'` is the important part. GitHub Pages serves the
+					// shell with max-age=600, so a plain fetch here can be answered from
+					// the browser's own HTTP cache with a ten-minute-old page -- and the
+					// relaunch still shows the previous build even though the worker did
+					// go to the network. This bypasses that cache and refreshes it.
+					const fresh = await Promise.race([
+						fetch(request.url, { cache: 'reload', credentials: 'same-origin' }),
+						new Promise<Response>((_, reject) =>
+							setTimeout(() => reject(new Error('slow network')), NAV_TIMEOUT)
+						)
+					]);
 					if (fresh.status === 200) cache.put(request, fresh.clone());
 					return fresh;
 				} catch {
