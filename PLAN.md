@@ -88,6 +88,21 @@ whichever incomplete stroke has a start point nearest the finger, so any stroke
 can be drawn at any time. Tracing a stroke backwards — starting from its end
 point — is likewise accepted.
 
+**One drag may cover several strokes.** Letters are written in continuous runs
+far more often than one stroke per touch: B is a stem and then both bowls in a
+single sweep, and K, k, R, M, W, Y and the lower-case bowl letters all join end
+to end. A finger that finishes a stroke and keeps going picks up the next one
+without lifting.
+
+The awkward part is that a stroke completes a little short of its end, so the
+finger normally runs out the last of it _after_ finishing — and across the
+alphabet that end point is very often exactly where another stroke begins.
+Arming on arrival would hand the tail of every stem to the stroke below it, and
+charge a star for the abandoned attempt. So the engine watches for the finger's
+closest approach to the junction and only commits once it _leaves_ again, which
+is also the moment that says which stroke was meant. Arriving at a junction is
+not the same as setting off from one.
+
 **Two-tier celebration.** Completing every stroke always finishes the letter.
 
 |                                                  | Celebration                              | Stars |
@@ -104,7 +119,8 @@ Per armed stroke:
 
 1. Measure the path, sample ~1 point per 2 user units into `pts[]`.
 2. `pointerdown` must land within `startRadius` of some incomplete stroke's
-   start (or end) point to arm it. Otherwise: bounce the arrow, ignore.
+   start (or end) point to arm it. Otherwise: bounce the arrow, but draw the
+   line anyway — an ignored finger reads as a broken app.
 3. `pointermove` searches a forward window `[progress, progress + lookahead]`
    for the sample nearest the finger. Within `tolerance` → advance `progress`.
    Finger strays wide → **hold** progress rather than failing. Toddler-forgiving:
@@ -113,8 +129,13 @@ Per armed stroke:
    Snapping the ink to the guide makes the letter draw itself perfectly however
    sloppy the finger was, which teaches nothing; drawing the real trail shows
    the child their own line and lets the score measure how close it ran.
-5. Stroke completes at ≥92% progress → pop animation, arrow moves on.
-6. `pointerup` early → gentle rewind to the start, retry.
+5. Stroke completes at ≥88% progress under the finger, or ≥75% if the finger
+   lifts there. Either way the trail is run out to the stroke's true end so the
+   child's line has no gap they never made.
+6. A still-down finger then enters the linking state, and may pick up any other
+   incomplete stroke it sets off from.
+7. `pointerup` early → the partial line stays on screen as uncounted grey ink,
+   and the stroke is free to retry from clean.
 
 Tolerances scale with rendered glyph height `H`: `tolerance ≈ 0.14H`,
 `startRadius ≈ 0.16H`. These become a difficulty setting later.

@@ -54,6 +54,19 @@ export const COMPLETE_AT = 0.88;
 export const FINISH_ON_LIFT = 0.75;
 
 /**
+ * How far a still-down finger must travel from where a stroke ended before it is
+ * read as reaching for the next one. Without it the tremor of a finger resting
+ * on a junction picks up a stroke nobody meant to begin.
+ */
+export const LINK_MOVE = 3;
+
+/**
+ * Progress below which a stroke has been armed but not actually begun. A cold
+ * attempt is one the finger can still be talked out of.
+ */
+export const COLD = 2;
+
+/**
  * How far the finger must travel before an ambiguous start is settled. Strokes
  * meet end to end all over the alphabet -- the foot of K, the middle of M, W
  * and Y, the stem of every bowl letter -- so a touch on a junction genuinely
@@ -116,6 +129,34 @@ export function findStart(
 	return findStarts(samples, done, p, radius)[0] ?? null;
 }
 
+/**
+ * Strokes a finger may pick up *without lifting*, having just finished one.
+ *
+ * Letters are written in continuous runs far more often than they are written
+ * one stroke per touch: B is a stem and then both bowls in a single sweep, and
+ * K, k, M, W, N and Y all join end to end. Requiring a lift between strokes
+ * teaches a rhythm nobody actually writes with.
+ *
+ * `from` is where the last stroke ended, and the gate against it is what stops a
+ * resting finger from arming the next stroke by trembling.
+ *
+ * Forward readings only. A stroke completes a little short of its end, so the
+ * finger runs out the last of it afterwards -- and that tail passes straight
+ * through where other strokes *end*. Allowing a backwards pick-up hands the tail
+ * of d's stem to d's own bowl, drawn in reverse, and charges a star for it.
+ * Drawing a stroke backwards still works; it just needs a touch of its own.
+ */
+export function chainStarts(
+	samples: StrokeSample[],
+	done: boolean[],
+	from: Pt,
+	p: Pt,
+	radius = START_RADIUS
+): Candidate[] {
+	if (d2(from, p) < LINK_MOVE ** 2) return [];
+	return findStarts(samples, done, p, radius).filter((c) => c.dir === 1);
+}
+
 /** Unit vector a stroke sets off in. */
 export function heading(s: StrokeSample, dir: 1 | -1): Pt {
 	const n = s.pts.length;
@@ -155,6 +196,20 @@ export function resolveStart(
 		}
 	}
 	return best;
+}
+
+/**
+ * Closest approach to a stroke as a whole, ignoring how far along it the finger
+ * has got. Used to tell a finger running out the last of a stroke it has already
+ * completed from one that has genuinely wandered off.
+ */
+export function distanceTo(s: StrokeSample, p: Pt): number {
+	let best = Infinity;
+	for (const q of s.pts) {
+		const d = d2(q, p);
+		if (d < best) best = d;
+	}
+	return Math.sqrt(best);
 }
 
 /**
