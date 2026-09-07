@@ -164,13 +164,17 @@
 		<path {d} class="guide" />
 	{/each}
 
-	{#each trails as trail, i (i)}
-		{#if trail.length === 1}
-			<circle class="ink" class:gold={result === 3} cx={trail[0].x} cy={trail[0].y} r="3.5" />
-		{:else if trail.length > 1}
-			<polyline class="ink" class:gold={result === 3} points={points(trail)} />
-		{/if}
-	{/each}
+	<!-- One translucent layer rather than translucent strokes: group opacity
+	     composites once, so crossing strokes do not darken where they meet. -->
+	<g class="ink-layer">
+		{#each trails as trail, i (i)}
+			{#if trail.length === 1}
+				<circle class="ink" class:gold={result === 3} cx={trail[0].x} cy={trail[0].y} r="3.5" />
+			{:else if trail.length > 1}
+				<polyline class="ink" class:gold={result === 3} points={points(trail)} />
+			{/if}
+		{/each}
+	</g>
 
 	{#if arrow}
 		<g class="arrow" class:nudge>
@@ -211,6 +215,11 @@
 		stroke-width: 1.6;
 		stroke-dasharray: 5 5;
 		vector-effect: non-scaling-stroke;
+	}
+	/* Translucent so the dashed guide stays readable underneath the child's own
+	   line -- they need to see how far off it they are while they draw. */
+	.ink-layer {
+		opacity: 0.65;
 	}
 	polyline.ink,
 	circle.ink {
