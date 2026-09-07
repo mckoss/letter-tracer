@@ -234,6 +234,37 @@ the arrow, confetti and splash.
   the stroke data (24 Greek letters, 33 Cyrillic, each in two cases) and word
   pictures chosen for the letter in that language rather than translated from
   the English list.
+- **Spoken prompts in a child's voice.** So a pre-reader gets the letter name
+  and the word without an adult reading it out. Generate them with a script at
+  `scripts/generate_tts.py`, built to this spec:
+  - Library: **`edge-tts`** (Python, `pip install edge-tts`), which drives
+    Microsoft Edge's online neural read-aloud service. It is a _build-time_ tool
+    only -- the clips are committed to the repo and the app itself stays fully
+    offline, like every other asset in `static/`.
+  - Voice / model: **`en-US-AnaNeural`**, the child voice in that catalogue,
+    which reads at about three years old. No other voice. Verify the name still
+    resolves with `edge-tts --list-voices`; that catalogue does get renamed.
+  - Rate: **`--rate=-10%`**, slow enough for a toddler to follow. Leave pitch
+    and volume at their defaults and do not reach for SSML.
+  - Output: mono MP3 into `static/sounds/voice/`, one file per line, named by
+    the key it is spoken for -- `a.mp3`, `apple.mp3`, `three.mp3`.
+  - Batch the whole line list in one run, and make the run idempotent: skip any
+    file that already exists unless `--force` is passed, so adding one word
+    later costs one request rather than sixty-two.
+  - Keep the line list in the script as a literal generated from the sources the
+    app already uses -- every glyph in `SETS`, and `WORDS` and `NUMBER_WORDS`
+    from `src/lib/words.ts` -- so the two cannot drift apart.
+  - Loudness-normalise and re-encode to mono afterwards, the way
+    `sad-trombone.mp3` was, so the voice sits at the level of the cheer.
+  - Wiring is small: extend `FILES` in `src/lib/sound.ts`; `unlock()` and
+    `play()` need no change, and the `muted` flag already covers it. The service
+    worker precaches everything under `static/`, so check the total size before
+    committing sixty-odd clips -- it all lands in the install-time precache.
+  - Two things to settle before building it. When it speaks (letter name on
+    entering a glyph, the word on completion, or both) is a judgement call, and
+    it must not talk over the cheer. And check Microsoft's terms of use for Edge
+    read-aloud output before shipping the MP3s in a public repo, recording what
+    you find in `CREDITS.md` the way the CC BY trombone is recorded.
 - Cursive / D'Nealian as an alternate letterform set.
 - Left-handed mode (mirror the arrow offset so the hand doesn't cover the guide).
 
