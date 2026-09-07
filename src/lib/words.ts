@@ -4,7 +4,7 @@
 
 export const WORDS: Record<string, string> = {
 	a: 'apple',
-	b: 'ball',
+	b: 'blaze',
 	c: 'cat',
 	d: 'dog',
 	e: 'elephant',
@@ -43,6 +43,12 @@ export const NUMBER_WORDS = [
 	'eight',
 	'nine'
 ];
+
+/** The lowercase word for a glyph, used to look up its picture. */
+export function wordKey(char: string): string {
+	const isDigit = char >= '0' && char <= '9';
+	return isDigit ? NUMBER_WORDS[Number(char)] : (WORDS[char.toLowerCase()] ?? '');
+}
 
 /** The word shown under a glyph, cased to match the glyph itself. */
 export function wordFor(char: string): string {

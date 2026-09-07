@@ -1,10 +1,10 @@
 <script lang="ts">
 	// The app: a grid of the active set, and the trace screen for one glyph.
 	import { onMount } from 'svelte';
-	import { art, type Subject } from '$lib/art/styles';
+	import { art } from '$lib/art';
 	import { ORDER, SETS, SET_LABELS, type StrokeSet } from '$lib/glyphs/data';
 	import { progress } from '$lib/progress.svelte';
-	import { wordFor } from '$lib/words';
+	import { wordFor, wordKey } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import HoldButton from '$lib/components/HoldButton.svelte';
@@ -14,9 +14,6 @@
 	import type { Stars as StarCount } from '$lib/trace/engine';
 
 	const SET_KEYS: StrokeSet[] = ['upper', 'lower', 'digits'];
-
-	// Only three word pictures exist so far (M5 draws the other 23).
-	const ART: Record<string, Subject> = { a: 'apple', d: 'dog', k: 'kite' };
 
 	let set = $state<StrokeSet>(progress.data.lastSet);
 	let view = $state<'grid' | 'trace'>('grid');
@@ -29,7 +26,7 @@
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
-	const subject = $derived(ART[char?.toLowerCase()]);
+	const picture = $derived(art(wordKey(char), 96));
 
 	function open(i: number, all = false) {
 		// Opening a glyph is a real tap, which is the only moment iOS will let us
@@ -179,9 +176,9 @@
 		</div>
 
 		<div class="band">
-			{#if subject}
+			{#if picture}
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- markup generated locally -->
-				{@html art(subject, 'poster', 96)}
+				{@html picture}
 			{/if}
 			<GlyphWord text={wordFor(char)} height={30} />
 		</div>
