@@ -88,6 +88,21 @@ whichever incomplete stroke has a start point nearest the finger, so any stroke
 can be drawn at any time. Tracing a stroke backwards — starting from its end
 point — is likewise accepted.
 
+**One drag may cover several strokes.** Letters are written in continuous runs
+far more often than one stroke per touch: B is a stem and then both bowls in a
+single sweep, and K, k, R, M, W, Y and the lower-case bowl letters all join end
+to end. A finger that finishes a stroke and keeps going picks up the next one
+without lifting.
+
+The awkward part is that a stroke completes a little short of its end, so the
+finger normally runs out the last of it _after_ finishing — and across the
+alphabet that end point is very often exactly where another stroke begins.
+Arming on arrival would hand the tail of every stem to the stroke below it, and
+charge a star for the abandoned attempt. So the engine watches for the finger's
+closest approach to the junction and only commits once it _leaves_ again, which
+is also the moment that says which stroke was meant. Arriving at a junction is
+not the same as setting off from one.
+
 **Two-tier celebration.** Completing every stroke always finishes the letter.
 
 |                                                  | Celebration                              | Stars |
@@ -104,7 +119,8 @@ Per armed stroke:
 
 1. Measure the path, sample ~1 point per 2 user units into `pts[]`.
 2. `pointerdown` must land within `startRadius` of some incomplete stroke's
-   start (or end) point to arm it. Otherwise: bounce the arrow, ignore.
+   start (or end) point to arm it. Otherwise: bounce the arrow, but draw the
+   line anyway — an ignored finger reads as a broken app.
 3. `pointermove` searches a forward window `[progress, progress + lookahead]`
    for the sample nearest the finger. Within `tolerance` → advance `progress`.
    Finger strays wide → **hold** progress rather than failing. Toddler-forgiving:
@@ -113,8 +129,13 @@ Per armed stroke:
    Snapping the ink to the guide makes the letter draw itself perfectly however
    sloppy the finger was, which teaches nothing; drawing the real trail shows
    the child their own line and lets the score measure how close it ran.
-5. Stroke completes at ≥92% progress → pop animation, arrow moves on.
-6. `pointerup` early → gentle rewind to the start, retry.
+5. Stroke completes at ≥88% progress under the finger, or ≥75% if the finger
+   lifts there. Either way the trail is run out to the stroke's true end so the
+   child's line has no gap they never made.
+6. A still-down finger then enters the linking state, and may pick up any other
+   incomplete stroke it sets off from.
+7. `pointerup` early → the partial line stays on screen as uncounted grey ink,
+   and the stroke is free to retry from clean.
 
 Tolerances scale with rendered glyph height `H`: `tolerance ≈ 0.14H`,
 `startRadius ≈ 0.16H`. These become a difficulty setting later.
@@ -234,6 +255,37 @@ the arrow, confetti and splash.
   the stroke data (24 Greek letters, 33 Cyrillic, each in two cases) and word
   pictures chosen for the letter in that language rather than translated from
   the English list.
+- **Spoken prompts in a child's voice.** So a pre-reader gets the letter name
+  and the word without an adult reading it out. Generate them with a script at
+  `scripts/generate_tts.py`, built to this spec:
+  - Library: **`edge-tts`** (Python, `pip install edge-tts`), which drives
+    Microsoft Edge's online neural read-aloud service. It is a _build-time_ tool
+    only -- the clips are committed to the repo and the app itself stays fully
+    offline, like every other asset in `static/`.
+  - Voice / model: **`en-US-AnaNeural`**, the child voice in that catalogue,
+    which reads at about three years old. No other voice. Verify the name still
+    resolves with `edge-tts --list-voices`; that catalogue does get renamed.
+  - Rate: **`--rate=-10%`**, slow enough for a toddler to follow. Leave pitch
+    and volume at their defaults and do not reach for SSML.
+  - Output: mono MP3 into `static/sounds/voice/`, one file per line, named by
+    the key it is spoken for -- `a.mp3`, `apple.mp3`, `three.mp3`.
+  - Batch the whole line list in one run, and make the run idempotent: skip any
+    file that already exists unless `--force` is passed, so adding one word
+    later costs one request rather than sixty-two.
+  - Keep the line list in the script as a literal generated from the sources the
+    app already uses -- every glyph in `SETS`, and `WORDS` and `NUMBER_WORDS`
+    from `src/lib/words.ts` -- so the two cannot drift apart.
+  - Loudness-normalise and re-encode to mono afterwards, the way
+    `sad-trombone.mp3` was, so the voice sits at the level of the cheer.
+  - Wiring is small: extend `FILES` in `src/lib/sound.ts`; `unlock()` and
+    `play()` need no change, and the `muted` flag already covers it. The service
+    worker precaches everything under `static/`, so check the total size before
+    committing sixty-odd clips -- it all lands in the install-time precache.
+  - Two things to settle before building it. When it speaks (letter name on
+    entering a glyph, the word on completion, or both) is a judgement call, and
+    it must not talk over the cheer. And check Microsoft's terms of use for Edge
+    read-aloud output before shipping the MP3s in a public repo, recording what
+    you find in `CREDITS.md` the way the CC BY trombone is recorded.
 - Cursive / D'Nealian as an alternate letterform set.
 - Left-handed mode (mirror the arrow offset so the hand doesn't cover the guide).
 

@@ -10,15 +10,21 @@
 	//
 	// Strokes are a set of candidates rather than a sequence, so a child may draw
 	// them in any order and may draw any of them backwards. Either still finishes
-	// the letter; only the star rating changes.
+	// the letter; only the star rating changes. Nor does a stroke need its own
+	// touch: one unbroken drag can run through as many strokes as it reaches,
+	// which is how B, K, M and W are really written.
 	import { browser } from '$app/environment';
 	import { GUIDE } from '$lib/glyphs/data';
 	import { samplePoints, strokeInfo } from '$lib/glyphs/measure';
 	import {
+		COLD,
 		DEVIATION_CLAMP,
 		RESOLVE_DISTANCE,
+		TOLERANCE,
 		advance,
+		chainStarts,
 		completeIndex,
+		distanceTo,
 		findStarts,
 		liftIndex,
 		nearest,
@@ -58,6 +64,26 @@
 	/** Readings of the touch still in play, until the finger says which is meant. */
 	let pending = $state<Candidate[] | null>(null);
 	let origin = $state<Pt | null>(null);
+	/**
+	 * Where the finger was when the last stroke of this gesture finished, while it
+	 * is still down. Non-null means the drag is between strokes and may pick up
+	 * another one.
+	 */
+	let linkFrom = $state<Pt | null>(null);
+	/** Ink laid down while reaching from one stroke to the next. */
+	let linkPoly = $state<Pt[] | null>(null);
+	/** Readings of the junction the finger has arrived at, and where it arrived. */
+	let linkHits = $state<Candidate[] | null>(null);
+	let linkPivot = $state<Pt | null>(null);
+	let linkBest = $state(Infinity);
+	/** The stroke that finish left under the finger, whose tail is not a wander. */
+	let linkAfter = $state(-1);
+	/**
+	 * Whether the armed stroke was picked up mid-gesture rather than touched. A
+	 * chained stroke that never got going has no ink of its own to keep: the marks
+	 * under it belong to the stroke that was being finished at the time.
+	 */
+	let chained = $state(false);
 	let result = $state<Stars | null>(null);
 	let nudge = $state(false);
 
@@ -75,6 +101,11 @@
 		attempt = null;
 		pending = null;
 		origin = null;
+		linkFrom = null;
+		linkPoly = null;
+		linkAfter = -1;
+		forgetJunction();
+		chained = false;
 		result = null;
 	}
 
@@ -92,7 +123,7 @@
 	// Always the lowest-numbered stroke still to do, so the arrow keeps giving
 	// useful guidance even after a child has worked out of order.
 	const arrow = $derived.by(() => {
-		if (!browser || attempt || result !== null) return null;
+		if (!browser || attempt || linkFrom || result !== null) return null;
 		const i = done.findIndex((v) => !v);
 		if (i < 0 || !strokes[i]) return null;
 		return strokeInfo(strokes[i]);
@@ -105,7 +136,64 @@
 		return { x: p.x, y: p.y };
 	}
 
-	function finish(i: number, dir: 1 | -1, from?: number) {
+	/**
+	 * Keep an abandoned line on screen if it is long enough that the child meant
+	 * to draw it. Below that it is the few pixels between two strokes, and a grey
+	 * smudge at every junction would be worse than nothing.
+	 */
+	function stray(trail: Pt[]) {
+		let len = 0;
+		for (let i = 1; i < trail.length; i++) {
+			len += Math.hypot(trail[i].x - trail[i - 1].x, trail[i].y - trail[i - 1].y);
+		}
+		if (len < STRAY_MIN) return;
+		freeTrails.push(trail);
+		if (freeTrails.length > FREE_LIMIT) freeTrails.shift();
+	}
+
+	function forgetJunction() {
+		linkHits = null;
+		linkPivot = null;
+		linkBest = Infinity;
+	}
+
+	/**
+	 * Let go of the armed stroke's line. It stays on screen as stray ink -- rubbing
+	 * out a child's line the instant they lift is startling -- unless the stroke
+	 * was picked up mid-gesture and never begun, in which case the marks under it
+	 * are the tail of the stroke just finished and are already drawn.
+	 */
+	function abandon() {
+		if (!attempt) return;
+		if (!(chained && attempt.progress < COLD)) stray(trails[attempt.index]);
+		trails[attempt.index] = [];
+	}
+
+	/** Arm a stroke under a finger that is already down. */
+	function arm(hits: Candidate[], p: Pt, midGesture = false) {
+		const first = hits[0];
+		if (samples[first.index].isDot) {
+			trails[first.index] = [samples[first.index].pts[0]];
+			return finish(first.index, 1, undefined, p);
+		}
+		trails[first.index] = [p];
+		attempt = { index: first.index, dir: first.dir, progress: 0 };
+		// Strokes meet end to end all over the alphabet, so hold the other
+		// readings open until the finger has moved far enough to say which.
+		pending = hits.length > 1 ? hits : null;
+		origin = p;
+		chained = midGesture;
+		linkFrom = null;
+		linkPoly = null;
+		linkAfter = -1;
+		forgetJunction();
+	}
+
+	/**
+	 * `chainAt` is where the finger is, and passing it says the gesture is still
+	 * going: the next stroke can be picked up without lifting.
+	 */
+	function finish(i: number, dir: 1 | -1, from?: number, chainAt?: Pt) {
 		// A stroke completes a little short of its end (COMPLETE_AT), so the trail
 		// stops where the finger was and leaves a gap the child never made. Run the
 		// line out along the rest of the stroke to close it.
@@ -118,6 +206,11 @@
 		if (dir === -1) reversals++;
 		attempt = null;
 		pending = null;
+		origin = null;
+		linkPoly = null;
+		linkFrom = chainAt ?? null;
+		linkAfter = i;
+		forgetJunction();
 		if (!done.every(Boolean)) return;
 		const stars = scoreLetter(completed, reversals, extras, devCount ? devSum / devCount : 0);
 		result = stars;
@@ -127,6 +220,9 @@
 	function onDown(e: PointerEvent) {
 		if (result !== null) return;
 		const p = local(e);
+		linkFrom = null;
+		linkPoly = null;
+		linkAfter = -1;
 		const hits = findStarts(samples, done, p);
 		try {
 			svgEl?.setPointerCapture(e.pointerId);
@@ -146,29 +242,66 @@
 			freeActive = freeTrails[freeTrails.length - 1];
 			return;
 		}
-		const first = hits[0];
-		// The tittle on i and j is a tap, not a drag.
-		if (samples[first.index].isDot) {
-			trails[first.index] = [samples[first.index].pts[0]];
-			return finish(first.index, 1);
+		// The tittle on i and j is a tap, not a drag; `arm` knows.
+		arm(hits, p);
+	}
+
+	/**
+	 * The finger is down but between strokes. Watch for it arriving at the start
+	 * of another one, and meanwhile show the reach across as stray ink -- but only
+	 * once it is long enough to be a line rather than a junction.
+	 */
+	function link(p: Pt) {
+		const hits = chainStarts(samples, done, linkFrom!, p);
+		if (hits.length) {
+			// Arriving at a junction is not the same as setting off from it. A stroke
+			// completes a little short of its end, so the finger runs out the last of
+			// it afterwards -- and half the alphabet has another stroke starting on
+			// that very point. Arming on arrival would hand the tail of every stem to
+			// the stroke below it. So watch for the closest approach, and only commit
+			// once the finger leaves it again, which is also what says which way.
+			const j = ptAt(samples[hits[0].index], hits[0].dir, 0);
+			const d = Math.hypot(p.x - j.x, p.y - j.y);
+			if (!linkHits || d < linkBest) {
+				linkHits = hits;
+				linkPivot = p;
+				linkBest = d;
+			}
+			if (Math.hypot(p.x - linkPivot!.x, p.y - linkPivot!.y) >= RESOLVE_DISTANCE) {
+				const from = linkPivot!;
+				const chosen =
+					linkHits!.length > 1 ? resolveStart(samples, linkHits!, from, p) : linkHits![0];
+				return arm([chosen], from, true);
+			}
+			return;
 		}
-		trails[first.index] = [p];
-		attempt = { index: first.index, dir: first.dir, progress: 0 };
-		// Strokes meet end to end all over the alphabet, so hold the other
-		// readings open until the finger has moved far enough to say which.
-		pending = hits.length > 1 ? hits : null;
-		origin = p;
+		forgetJunction();
+		if (!linkPoly) {
+			if (Math.hypot(p.x - linkFrom!.x, p.y - linkFrom!.y) < STRAY_MIN) return;
+			// A stroke completes a little short of its end, so the finger normally
+			// runs out the last of it after finishing. That tail is the stroke being
+			// drawn properly, not a wander, and must not be greyed over.
+			if (linkAfter >= 0 && distanceTo(samples[linkAfter], p) <= TOLERANCE) return;
+			freeTrails.push([linkFrom!, p]);
+			if (freeTrails.length > FREE_LIMIT) freeTrails.shift();
+			// Back out of the state array: pushing a plain array into $state stores
+			// a proxy, and appending to the original would never reach the render.
+			linkPoly = freeTrails[freeTrails.length - 1];
+			return;
+		}
+		const tail = linkPoly[linkPoly.length - 1];
+		if ((p.x - tail.x) ** 2 + (p.y - tail.y) ** 2 > 0.6) linkPoly.push(p);
 	}
 
 	function onMove(e: PointerEvent) {
+		if (result !== null) return;
+		const p = local(e);
 		if (freeActive) {
-			const p = local(e);
 			const tail = freeActive[freeActive.length - 1];
 			if (!tail || (p.x - tail.x) ** 2 + (p.y - tail.y) ** 2 > 0.6) freeActive.push(p);
 			return;
 		}
-		if (!attempt) return;
-		const p = local(e);
+		if (!attempt) return linkFrom ? link(p) : undefined;
 
 		if (pending && origin) {
 			if (Math.hypot(p.x - origin.x, p.y - origin.y) < RESOLVE_DISTANCE) {
@@ -190,21 +323,41 @@
 		const s = samples[attempt.index];
 		const m = nearest(s, attempt, p);
 
+		// Armed but never begun, and now nowhere near the stroke: the finger is on
+		// its way somewhere else. Let it go, rather than staying latched onto a
+		// stroke it has left behind -- that is what strands a child who runs back
+		// up B's stem to start the bowls.
+		if (attempt.progress < COLD && m.dist > TOLERANCE) {
+			const hits = chainStarts(samples, done, origin ?? p, p);
+			const next = hits[0];
+			if (next && (next.index !== attempt.index || next.dir !== attempt.dir)) {
+				abandon();
+				return arm(hits, p, true);
+			}
+		}
+
 		// Accuracy is judged on every sample, including the ones that strayed past
 		// the tolerance and so did not move the child forward. One wild excursion
-		// costs a star; it does not wreck the average outright.
-		devSum += Math.min(m.dist, DEVIATION_CLAMP);
-		devCount++;
+		// costs a star; it does not wreck the average outright. Reaching for a
+		// stroke not yet begun is travel, not bad drawing, so it is not judged.
+		if (attempt.progress >= COLD || m.dist <= TOLERANCE) {
+			devSum += Math.min(m.dist, DEVIATION_CLAMP);
+			devCount++;
+		}
 
 		const trail = trails[attempt.index];
 		const tail = trail[trail.length - 1];
 		if (!tail || (p.x - tail.x) ** 2 + (p.y - tail.y) ** 2 > 0.6) trail.push(p);
 
 		attempt.progress = advance(s, attempt, p);
-		if (attempt.progress >= completeIndex(s)) finish(attempt.index, attempt.dir, attempt.progress);
+		if (attempt.progress >= completeIndex(s))
+			finish(attempt.index, attempt.dir, attempt.progress, p);
 	}
 
 	function onUp() {
+		linkFrom = null;
+		linkPoly = null;
+		linkAfter = -1;
 		if (freeActive) {
 			// Keep it on screen; the erase button is how it goes away.
 			freeActive = null;
@@ -222,18 +375,15 @@
 		// Keep what was drawn on screen -- rubbing out a child's line the instant
 		// they lift is startling. It moves to the uncounted pile, so a retry starts
 		// from a clean stroke while the earlier try stays visible.
-		const partial = trails[attempt.index];
-		if (partial.length > 1) {
-			freeTrails.push(partial);
-			if (freeTrails.length > FREE_LIMIT) freeTrails.shift();
-		}
-		trails[attempt.index] = [];
+		abandon();
 		attempt = null;
 		pending = null;
 	}
 
 	/** Bound how much stray scribble a determined toddler can accumulate. */
 	const FREE_LIMIT = 20;
+	/** Shorter than this and a leftover line is a smudge, not something drawn. */
+	const STRAY_MIN = 8;
 
 	const points = (t: Pt[]) => t.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 </script>

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	advance,
+	chainStarts,
 	findStart,
 	findStarts,
 	liftIndex,
@@ -83,6 +84,47 @@ describe('resolveStart', () => {
 		const hits = findStarts(kLegs, [false, false], junction);
 		const got = resolveStart(kLegs, hits, junction, { x: 32, y: 55 });
 		expect(got).toEqual({ index: 0, dir: -1 });
+	});
+});
+
+describe('chainStarts', () => {
+	const seg = (x0: number, y0: number, x1: number, y1: number): StrokeSample => {
+		const n = 41;
+		return {
+			pts: Array.from({ length: n }, (_, i) => ({
+				x: x0 + ((x1 - x0) * i) / (n - 1),
+				y: y0 + ((y1 - y0) * i) / (n - 1)
+			})),
+			length: Math.hypot(x1 - x0, y1 - y0),
+			isDot: false
+		};
+	};
+	// K: the stem is drawn, the upper leg has just finished at its foot, and the
+	// finger has not lifted.
+	const legs = [seg(74, 10, 26, 62), seg(26, 62, 76, 110)];
+	const foot = { x: 26, y: 62 };
+
+	it('picks up the next stroke from a finger that never lifted', () => {
+		const hits = chainStarts(legs, [true, false], foot, { x: 30, y: 66 });
+		expect(hits[0]).toEqual({ index: 1, dir: 1 });
+	});
+
+	it('ignores the tremor of a finger resting on the junction', () => {
+		expect(chainStarts(legs, [true, false], foot, { x: 27, y: 63 })).toEqual([]);
+	});
+
+	it('finds nothing when the finger runs on past every start', () => {
+		expect(chainStarts(legs, [true, false], foot, { x: 90, y: 20 })).toEqual([]);
+	});
+
+	it('leaves a finished stroke alone', () => {
+		expect(chainStarts(legs, [true, true], foot, { x: 30, y: 66 })).toEqual([]);
+	});
+
+	it('will not pick a stroke up backwards', () => {
+		// The far end of the lower leg, which a finger running out the end of some
+		// other stroke can easily pass through.
+		expect(chainStarts(legs, [true, false], foot, { x: 74, y: 108 })).toEqual([]);
 	});
 });
 
