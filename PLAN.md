@@ -33,7 +33,7 @@ Vitest. Node pinned to LTS 24.20.0 (`.nvmrc`).
    - top ~12%: back button, per-letter stroke dots, star counter
    - middle ~68%: the tracing stage
    - bottom 20%: word illustration + the word itself
-4. **Progress** (later) — calendar heatmap of stars per day.
+4. **Play history** — a 28-day heatmap of stars per day, under the grid.
 
 ## Core design: glyph stroke data
 
@@ -213,8 +213,12 @@ Written through a small `$state`-backed store module so nothing else touches
 - [x] **M4** — splash screen, PWA manifest + service worker, GitHub Pages deploy
       (live at https://mckoss.com/letter-tracer/)
 - [x] **M5** — 26 word illustrations in Poster style + 10 digit counting scenes
-- [ ] **M6** — polish: difficulty setting, progress calendar, optional audio
-      toggle, reduced-motion pass
+- [ ] **M6** — polish: difficulty setting (the tolerance and tidiness numbers
+      want a real toddler to calibrate against), optional per-letter practice
+      counts, richer celebration on a new personal best
+
+Done along the way: mute toggle, play-history heatmap, reduced-motion passes on
+the arrow, confetti and splash.
 
 ## Backlog
 

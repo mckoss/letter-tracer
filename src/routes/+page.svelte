@@ -9,6 +9,7 @@
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import HoldButton from '$lib/components/HoldButton.svelte';
 	import Splash from '$lib/components/Splash.svelte';
+	import PlayHistory from '$lib/components/PlayHistory.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { play, unlock } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
@@ -172,6 +173,8 @@
 		</div>
 
 		<button class="play" onclick={() => open(0, true)}>Play all &rarr;</button>
+
+		<PlayHistory />
 	{:else}
 		<div class="stage">
 			{#key char}
