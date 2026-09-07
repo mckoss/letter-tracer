@@ -277,8 +277,10 @@ the arrow, confetti and splash.
   pictures chosen for the letter in that language rather than translated from
   the English list.
 - **Spoken prompts in a child's voice.** So a pre-reader gets the letter name
-  and the word without an adult reading it out. Generate them with a script at
-  `scripts/generate_tts.py`, built to this spec:
+  and the word without an adult reading it out. The generator is **built** --
+  `scripts/generate_tts.py`, which takes any phrase on the command line as well
+  as `--all` for the 62 clips the app needs. What is left is deciding _when_ the
+  app speaks, and wiring `sound.ts`. Built to this spec:
   - Library: **`edge-tts`** (Python, `pip install edge-tts`), which drives
     Microsoft Edge's online neural read-aloud service. It is a _build-time_ tool
     only -- the clips are committed to the repo and the app itself stays fully
@@ -302,11 +304,19 @@ the arrow, confetti and splash.
     `play()` need no change, and the `muted` flag already covers it. The service
     worker precaches everything under `static/`, so check the total size before
     committing sixty-odd clips -- it all lands in the install-time precache.
-  - Two things to settle before building it. When it speaks (letter name on
-    entering a glyph, the word on completion, or both) is a judgement call, and
-    it must not talk over the cheer. And check Microsoft's terms of use for Edge
-    read-aloud output before shipping the MP3s in a public repo, recording what
-    you find in `CREDITS.md` the way the CC BY trombone is recorded.
+  - **Licensing, checked:** `edge-tts` drives Edge's Read Aloud endpoint, which
+    Microsoft does not document as a public API and publishes no redistribution
+    grant for. So the clips are **not committed** -- `static/sounds/voice/` is
+    gitignored and the script regenerates them on demand. See `CREDITS.md`. To
+    ship them: settle it with Microsoft, move to Azure Speech on a paid
+    subscription, or record a real child.
+  - **Still to settle:** when it speaks. Letter name on entering a glyph, the
+    word on completion, or both -- a judgement call, and it must not talk over
+    the cheer.
+  - The letter clips feed each letter to the engine as an isolated capital and
+    trust it to read the letter's name. That is an assumption about a speech
+    engine, so `LETTER_TEXT` in the script lists all 26 explicitly and any that
+    comes out wrong can be respelled without touching the code.
 - Cursive / D'Nealian as an alternate letterform set.
 - Left-handed mode (mirror the arrow offset so the hand doesn't cover the guide).
 
