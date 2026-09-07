@@ -194,24 +194,22 @@
 		</div>
 
 		<nav class="nav">
-			<HoldButton
-				onhold={() => {
+			<button
+				class="erase"
+				onclick={() => {
 					earned = null;
 					stage?.reset();
 				}}
-				label="Rub it out and start this letter again"
+				aria-label="Rub it out and start this letter again"
 			>
 				<svg viewBox="0 0 32 32" aria-hidden="true">
-					<g transform="rotate(-32 16 17)">
-						<rect x="8" y="7" width="16" height="19" rx="3.5" fill="#f3e7ce" />
-						<path
-							d="M11.5 7 h9 a3.5 3.5 0 0 1 3.5 3.5 v7.5 h-16 v-7.5 a3.5 3.5 0 0 1 3.5-3.5 z"
-							fill="#c34c3e"
-						/>
-						<rect x="8" y="17.4" width="16" height="1.4" fill="#9e3a31" opacity="0.35" />
+					<g transform="rotate(-28 16 16)">
+						<path d="M3.5 16 L9 8.5 L23 8.5 L28.5 16 L23 23.5 L9 23.5 Z" fill="#ef9aa4" />
+						<path d="M3.5 16 L9 23.5 L23 23.5 L28.5 16 Z" fill="#d87d8b" />
+						<path d="M9 8.5 L23 8.5 L25.4 11.8 L11.4 11.8 Z" fill="#f7bcc2" />
 					</g>
 				</svg>
-			</HoldButton>
+			</button>
 			<button onclick={() => open(Math.max(0, index - 1))} disabled={index === 0}>&larr;</button>
 			<span>{index + 1} / {chars.length}</span>
 			<button
@@ -220,12 +218,24 @@
 			>
 		</nav>
 	{/if}
+	<span class="version">v{__APP_VERSION__}</span>
+
 	{#if leaveHint}
 		<p class="leave-hint" role="status">Press back again to leave</p>
 	{/if}
 </div>
 
 <style>
+	.version {
+		position: fixed;
+		right: 8px;
+		bottom: 5px;
+		font-size: 10px;
+		letter-spacing: 0.03em;
+		color: #b8b1bd;
+		pointer-events: none;
+		z-index: 10;
+	}
 	.leave-hint {
 		position: fixed;
 		left: 50%;
@@ -418,6 +428,24 @@
 		font-size: 17px;
 		color: #6b6072;
 		cursor: pointer;
+	}
+	.erase {
+		border: 0;
+		background: none;
+		width: 46px;
+		height: 46px;
+		padding: 0;
+		display: grid;
+		place-items: center;
+		border-radius: 14px;
+		cursor: pointer;
+	}
+	.erase svg {
+		width: 34px;
+		height: 34px;
+	}
+	.erase:active {
+		background: #f0e8db;
 	}
 	.nav button:disabled {
 		opacity: 0.35;
