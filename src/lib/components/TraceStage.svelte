@@ -21,6 +21,7 @@
 		completeIndex,
 		findStarts,
 		nearest,
+		ptAt,
 		resolveStart,
 		scoreLetter,
 		type Attempt,
@@ -40,6 +41,13 @@
 	let samples = $state<StrokeSample[]>([]);
 	let done = $state<boolean[]>([]);
 	let trails = $state<Pt[][]>([]);
+	/**
+	 * Lines drawn that did not begin on any stroke's start. They are still shown:
+	 * a child who draws in the wrong place should see what they drew, not have
+	 * the screen ignore them. They just do not count toward the letter.
+	 */
+	let freeTrails = $state<Pt[][]>([]);
+	let freeActive = $state<Pt[] | null>(null);
 	let completed = $state<number[]>([]);
 	let reversals = $state(0);
 	let extras = $state(0);
@@ -52,16 +60,12 @@
 	let result = $state<Stars | null>(null);
 	let nudge = $state(false);
 
-	// Reading `strokes` here is what re-runs this when the glyph changes.
-	$effect(() => {
-		const list = strokes;
-		if (!browser) return;
-		samples = list.map((d) => {
-			const info = strokeInfo(d);
-			return { pts: samplePoints(d), length: info.length, isDot: info.isDot };
-		});
-		done = list.map(() => false);
-		trails = list.map(() => []);
+	/** Wipe every stroke and start the letter over. */
+	export function reset() {
+		done = strokes.map(() => false);
+		trails = strokes.map(() => []);
+		freeTrails = [];
+		freeActive = null;
 		completed = [];
 		reversals = 0;
 		extras = 0;
@@ -71,6 +75,17 @@
 		pending = null;
 		origin = null;
 		result = null;
+	}
+
+	// Reading `strokes` here is what re-runs this when the glyph changes.
+	$effect(() => {
+		const list = strokes;
+		if (!browser) return;
+		samples = list.map((d) => {
+			const info = strokeInfo(d);
+			return { pts: samplePoints(d), length: info.length, isDot: info.isDot };
+		});
+		reset();
 	});
 
 	// Always the lowest-numbered stroke still to do, so the arrow keeps giving
@@ -89,7 +104,14 @@
 		return { x: p.x, y: p.y };
 	}
 
-	function finish(i: number, dir: 1 | -1) {
+	function finish(i: number, dir: 1 | -1, from?: number) {
+		// A stroke completes a little short of its end (COMPLETE_AT), so the trail
+		// stops where the finger was and leaves a gap the child never made. Run the
+		// line out along the rest of the stroke to close it.
+		const s = samples[i];
+		if (s && !s.isDot && from !== undefined) {
+			for (let k = Math.ceil(from); k < s.pts.length; k++) trails[i].push(ptAt(s, dir, k));
+		}
 		done[i] = true;
 		completed.push(i);
 		if (dir === -1) reversals++;
@@ -105,15 +127,23 @@
 		if (result !== null) return;
 		const p = local(e);
 		const hits = findStarts(samples, done, p);
-		if (!hits.length) {
-			nudge = true;
-			setTimeout(() => (nudge = false), 420);
-			return;
-		}
 		try {
 			svgEl?.setPointerCapture(e.pointerId);
 		} catch {
 			// No active pointer to capture (synthetic events); tracking still works.
+		}
+		if (!hits.length) {
+			// Nudge the arrow toward where the stroke does start, but draw the line
+			// anyway. An ignored finger reads as a broken app.
+			nudge = true;
+			setTimeout(() => (nudge = false), 420);
+			freeTrails.push([p]);
+			if (freeTrails.length > FREE_LIMIT) freeTrails.shift();
+			// Take the reference back OUT of the state array: pushing a plain array
+			// into $state stores a proxy of it, and appending to the original would
+			// never reach the rendered copy.
+			freeActive = freeTrails[freeTrails.length - 1];
+			return;
 		}
 		const first = hits[0];
 		// The tittle on i and j is a tap, not a drag.
@@ -130,6 +160,12 @@
 	}
 
 	function onMove(e: PointerEvent) {
+		if (freeActive) {
+			const p = local(e);
+			const tail = freeActive[freeActive.length - 1];
+			if (!tail || (p.x - tail.x) ** 2 + (p.y - tail.y) ** 2 > 0.6) freeActive.push(p);
+			return;
+		}
 		if (!attempt) return;
 		const p = local(e);
 
@@ -164,18 +200,34 @@
 		if (!tail || (p.x - tail.x) ** 2 + (p.y - tail.y) ** 2 > 0.6) trail.push(p);
 
 		attempt.progress = advance(s, attempt, p);
-		if (attempt.progress >= completeIndex(s)) finish(attempt.index, attempt.dir);
+		if (attempt.progress >= completeIndex(s)) finish(attempt.index, attempt.dir, attempt.progress);
 	}
 
 	function onUp() {
+		if (freeActive) {
+			// Keep it on screen; the erase button is how it goes away.
+			freeActive = null;
+			return;
+		}
 		if (!attempt) return;
 		// A stroke genuinely begun and then let go of is the "extra stroke" that
 		// costs a star. A stray tap that never moved is forgiven.
 		if (attempt.progress > 2) extras++;
+		// Keep what was drawn on screen -- rubbing out a child's line the instant
+		// they lift is startling. It moves to the uncounted pile, so a retry starts
+		// from a clean stroke while the earlier try stays visible.
+		const partial = trails[attempt.index];
+		if (partial.length > 1) {
+			freeTrails.push(partial);
+			if (freeTrails.length > FREE_LIMIT) freeTrails.shift();
+		}
 		trails[attempt.index] = [];
 		attempt = null;
 		pending = null;
 	}
+
+	/** Bound how much stray scribble a determined toddler can accumulate. */
+	const FREE_LIMIT = 20;
 
 	const points = (t: Pt[]) => t.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 </script>
@@ -200,6 +252,13 @@
 	<!-- One translucent layer rather than translucent strokes: group opacity
 	     composites once, so crossing strokes do not darken where they meet. -->
 	<g class="ink-layer">
+		{#each freeTrails as trail, i (i)}
+			{#if trail.length > 1}
+				<polyline class="free" points={points(trail)} />
+			{:else if trail.length === 1}
+				<circle class="free-dot" cx={trail[0].x} cy={trail[0].y} r="3.5" />
+			{/if}
+		{/each}
 		{#each trails as trail, i (i)}
 			{#if trail.length === 1}
 				<circle class="ink" class:gold={result === 3} cx={trail[0].x} cy={trail[0].y} r="3.5" />
@@ -274,6 +333,18 @@
 	}
 	.ink.gold {
 		stroke: #d89a4a;
+	}
+	/* Drawn, but off the guide: a muted pencil grey rather than the ink green, so
+	   it is visible without being mistaken for progress. */
+	.free {
+		fill: none;
+		stroke: #9a92a6;
+		stroke-width: 7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.free-dot {
+		fill: #9a92a6;
 	}
 	circle.ink.gold {
 		fill: #d89a4a;

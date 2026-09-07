@@ -1,0 +1,22 @@
+{
+	"name": "Letter Tracer",
+	"short_name": "Letters",
+	"description": "Trace letters and numbers with your finger.",
+	"start_url": ".",
+	"scope": ".",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#fbf8f2",
+	"theme_color": "#c34c3e",
+	"categories": ["education", "kids"],
+	"icons": [
+		{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{
+			"src": "icons/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}

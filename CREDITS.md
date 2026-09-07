@@ -8,7 +8,13 @@
 | `static/sounds/sad-trombone.mp3` | ["Sad Trombone"](https://commons.wikimedia.org/wiki/File:Sad_Trombone-Joe_Lamb-665429450.ogg) by **Joe Lamb** on Wikimedia Commons | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) — attribution required |
 
 Both were trimmed, loudness-normalised and re-encoded to mono MP3 for size.
-The cheer is the isolated burst at 0.35–1.70 s of the source recording.
+
+A note on picking the cheer: the first attempt used a sound-library recording,
+`G29-61-Children Cheering`, and took the one isolated full-scale burst in it —
+which turned out to be the engineer announcing the slate, "G29-61". Library
+recordings begin that way, and a loudness envelope cannot tell a shouted word
+from a shouted crowd. The rule that avoids it: prefer a source whose _entire_
+file is the sound wanted, so there is nothing else it could be.
 
 ## Artwork
 

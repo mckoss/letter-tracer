@@ -7,6 +7,7 @@
 	import { wordFor } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
+	import HoldButton from '$lib/components/HoldButton.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { play, unlock } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
@@ -23,6 +24,8 @@
 	let playAll = $state(false);
 	let earned = $state<StarCount | null>(null);
 	let confetti: Confetti | undefined = $state();
+	let stage: TraceStage | undefined = $state();
+	let leaveHint = $state(false);
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
@@ -32,10 +35,12 @@
 		// Opening a glyph is a real tap, which is the only moment iOS will let us
 		// prime the audio elements.
 		unlock();
+		const wasGrid = view === 'grid';
 		index = i;
 		playAll = all;
 		earned = null;
 		view = 'trace';
+		if (wasGrid) history.pushState({ lt: 'trace' }, '');
 	}
 
 	function done(stars: StarCount) {
@@ -52,6 +57,32 @@
 			view = 'grid';
 		}
 	}
+
+	function goGrid() {
+		view = 'grid';
+		earned = null;
+	}
+
+	// The system back gesture used to leave the app outright, which a child
+	// triggers constantly. Entering a glyph pushes a history entry, so back comes
+	// out to the grid instead; from the grid it takes two presses to leave.
+	onMount(() => {
+		history.replaceState({ lt: 'grid' }, '');
+		const onPop = () => {
+			if (view === 'trace') {
+				goGrid();
+				history.pushState({ lt: 'grid' }, '');
+				return;
+			}
+			if (!leaveHint) {
+				leaveHint = true;
+				setTimeout(() => (leaveHint = false), 2200);
+				history.pushState({ lt: 'grid' }, '');
+			}
+		};
+		addEventListener('popstate', onPop);
+		return () => removeEventListener('popstate', onPop);
+	});
 
 	// Deep link for review: /?c=A opens straight onto that glyph.
 	onMount(() => {
@@ -81,8 +112,8 @@
 <div class="app" class:tracing={view === 'trace'}>
 	<header>
 		{#if view === 'trace'}
-			<button class="home" onclick={() => (view = 'grid')} aria-label="Back to all the letters">
-				<svg viewBox="0 0 32 32" aria-hidden="true">
+			<HoldButton onhold={goGrid} label="Back to all the letters">
+				<svg class="home" viewBox="0 0 32 32" aria-hidden="true">
 					<rect x="21.5" y="6.5" width="3.6" height="6" rx="1" fill="#9e3a31" />
 					<path d="M2.5 16 L16 4 L29.5 16 Z" fill="#c34c3e" />
 					<rect x="6.5" y="15" width="19" height="13" rx="2" fill="#d89a4a" />
@@ -90,7 +121,7 @@
 					<rect x="8.8" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
 					<rect x="19.6" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
 				</svg>
-			</button>
+			</HoldButton>
 		{:else}
 			<span class="brand">Letter Tracer</span>
 		{/if}
@@ -140,7 +171,7 @@
 	{:else}
 		<div class="stage">
 			{#key char}
-				<TraceStage strokes={SETS[set][char]} {char} onDone={done} />
+				<TraceStage bind:this={stage} strokes={SETS[set][char]} {char} onDone={done} />
 			{/key}
 			{#if earned !== null}
 				<div class="earned"><Stars value={earned} size={30} /></div>
@@ -156,6 +187,24 @@
 		</div>
 
 		<nav class="nav">
+			<HoldButton
+				onhold={() => {
+					earned = null;
+					stage?.reset();
+				}}
+				label="Rub it out and start this letter again"
+			>
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<g transform="rotate(-32 16 17)">
+						<rect x="8" y="7" width="16" height="19" rx="3.5" fill="#f3e7ce" />
+						<path
+							d="M11.5 7 h9 a3.5 3.5 0 0 1 3.5 3.5 v7.5 h-16 v-7.5 a3.5 3.5 0 0 1 3.5-3.5 z"
+							fill="#c34c3e"
+						/>
+						<rect x="8" y="17.4" width="16" height="1.4" fill="#9e3a31" opacity="0.35" />
+					</g>
+				</svg>
+			</HoldButton>
 			<button onclick={() => open(Math.max(0, index - 1))} disabled={index === 0}>&larr;</button>
 			<span>{index + 1} / {chars.length}</span>
 			<button
@@ -164,9 +213,25 @@
 			>
 		</nav>
 	{/if}
+	{#if leaveHint}
+		<p class="leave-hint" role="status">Press back again to leave</p>
+	{/if}
 </div>
 
 <style>
+	.leave-hint {
+		position: fixed;
+		left: 50%;
+		bottom: 26px;
+		transform: translateX(-50%);
+		margin: 0;
+		padding: 10px 18px;
+		border-radius: 999px;
+		background: #3b3039;
+		color: #fbf8f2;
+		font-size: 14px;
+		z-index: 30;
+	}
 	:global(*, *::before, *::after) {
 		box-sizing: border-box;
 	}
@@ -216,24 +281,6 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-	}
-	.home {
-		border: 0;
-		background: none;
-		padding: 0;
-		width: 46px;
-		height: 46px;
-		cursor: pointer;
-		display: grid;
-		place-items: center;
-		border-radius: 14px;
-	}
-	.home:active {
-		background: #f0e8db;
-	}
-	.home svg {
-		width: 38px;
-		height: 38px;
 	}
 	.mute {
 		border: 0;
