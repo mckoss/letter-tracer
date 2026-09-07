@@ -11,6 +11,7 @@ export const P = {
 	moss: '#3D6440',
 	teal: '#3E7C7B',
 	blue: '#4A7A9B',
+	sky: '#A7CBD1',
 	navy: '#3B5A72',
 	purple: '#7C6B9E',
 	pink: '#C57D80',
