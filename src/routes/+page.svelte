@@ -7,7 +7,6 @@
 	import { wordFor, wordKey } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
-	import HoldButton from '$lib/components/HoldButton.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import PlayHistory from '$lib/components/PlayHistory.svelte';
 	import Stars from '$lib/components/Stars.svelte';
@@ -112,13 +111,16 @@
 	<Splash ondone={() => (splash = false)} />
 {/if}
 
+<!-- Outside .app so no screen's stacking context can bury it. -->
+<span class="version">v{__APP_VERSION__}</span>
+
 <Confetti bind:this={confetti} />
 
 <div class="app" class:tracing={view === 'trace'}>
 	<header>
 		{#if view === 'trace'}
-			<HoldButton onhold={goGrid} label="Back to all the letters">
-				<svg class="home" viewBox="0 0 32 32" aria-hidden="true">
+			<button class="home" onclick={goGrid} aria-label="Back to all the letters">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
 					<rect x="21.5" y="6.5" width="3.6" height="6" rx="1" fill="#9e3a31" />
 					<path d="M2.5 16 L16 4 L29.5 16 Z" fill="#c34c3e" />
 					<rect x="6.5" y="15" width="19" height="13" rx="2" fill="#d89a4a" />
@@ -126,7 +128,7 @@
 					<rect x="8.8" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
 					<rect x="19.6" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
 				</svg>
-			</HoldButton>
+			</button>
 		{:else}
 			<span class="brand">Letter Tracer</span>
 		{/if}
@@ -218,8 +220,6 @@
 			>
 		</nav>
 	{/if}
-	<span class="version">v{__APP_VERSION__}</span>
-
 	{#if leaveHint}
 		<p class="leave-hint" role="status">Press back again to leave</p>
 	{/if}
@@ -228,13 +228,17 @@
 <style>
 	.version {
 		position: fixed;
-		right: 8px;
-		bottom: 5px;
-		font-size: 10px;
+		/* Clear of the iPhone home indicator, which would otherwise sit on top of it. */
+		right: calc(10px + env(safe-area-inset-right));
+		bottom: calc(6px + env(safe-area-inset-bottom));
+		font-size: 11px;
 		letter-spacing: 0.03em;
-		color: #b8b1bd;
+		/* Quiet, but not invisible: the first attempt was 2:1 against the ground. */
+		color: #736b79;
+		opacity: 0.75;
 		pointer-events: none;
-		z-index: 10;
+		/* Above the splash (50) and the confetti canvas (20). */
+		z-index: 60;
 	}
 	.leave-hint {
 		position: fixed;
@@ -429,6 +433,7 @@
 		color: #6b6072;
 		cursor: pointer;
 	}
+	.home,
 	.erase {
 		border: 0;
 		background: none;
@@ -440,10 +445,16 @@
 		border-radius: 14px;
 		cursor: pointer;
 	}
+	.home svg,
 	.erase svg {
 		width: 34px;
 		height: 34px;
 	}
+	.home svg {
+		width: 38px;
+		height: 38px;
+	}
+	.home:active,
 	.erase:active {
 		background: #f0e8db;
 	}

@@ -47,8 +47,25 @@ self.addEventListener('fetch', (event) => {
 		(async () => {
 			const cache = await caches.open(CACHE);
 
-			// Everything in ASSETS is versioned and was precached on install, so it
-			// can be served straight from the cache without touching the network.
+			// Pages go to the network first, so a deploy takes effect on the next
+			// load rather than the one after it. Serving the HTML shell cache-first
+			// means a returning visitor gets the previous build and has to reload
+			// twice to see a change -- which reads as "my fix did not ship".
+			// The cache stays the offline fallback.
+			if (request.mode === 'navigate') {
+				try {
+					const fresh = await fetch(request);
+					if (fresh.status === 200) cache.put(request, fresh.clone());
+					return fresh;
+				} catch {
+					const hit = (await cache.match(request)) ?? (await cache.match(`${base}/`));
+					if (hit) return hit;
+					throw new Error('offline and not cached');
+				}
+			}
+
+			// Build assets are content-hashed, so cache-first is always correct for
+			// them: a changed file arrives under a new name.
 			if (ASSETS.includes(url.pathname)) {
 				const hit = await cache.match(url.pathname);
 				if (hit) return hit;
