@@ -8,6 +8,7 @@
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import HoldButton from '$lib/components/HoldButton.svelte';
+	import Splash from '$lib/components/Splash.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { play, unlock } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
@@ -23,6 +24,8 @@
 	let confetti: Confetti | undefined = $state();
 	let stage: TraceStage | undefined = $state();
 	let leaveHint = $state(false);
+	// Shown on every launch: it is three seconds, skippable, and toddlers like it.
+	let splash = $state(true);
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
@@ -103,6 +106,10 @@
 </script>
 
 <svelte:head><title>Letter Tracer</title></svelte:head>
+
+{#if splash}
+	<Splash ondone={() => (splash = false)} />
+{/if}
 
 <Confetti bind:this={confetti} />
 

@@ -165,12 +165,16 @@ Subjects describe themselves as a list of primitives; the style decides fill,
 outline and shading. Adding a style never touches a drawing.
 `src/routes/styles` renders the candidates side by side.
 
-**Word list (draft):** apple · ball · cat · dog · elephant · fish · goat · hat ·
-igloo · juice · kite · leaf · moon · nest · orange · penguin · queen · rainbow ·
-sun · tree · umbrella · violin · whale · xylophone · yo-yo · zebra
+**Word list:** apple · blaze · cat · dog · elephant · fish · goat · hat · igloo ·
+juice · kite · leaf · moon · nest · orange · penguin · queen · rainbow · sun ·
+tree · umbrella · violin · whale · xylophone · yoyo · zebra
 
-Lowercase reuses the same illustrations. Digits get a **count scene**
-(`3` → three balloons), which teaches numeracy alongside the numeral.
+`blaze` is a generic monster truck, not a likeness of the television character —
+this repository is public.
+
+Lowercase reuses the same illustrations. Digits get a **count scene** in the
+familiar dice/ten-frame arrangements, which are easier to subitise than a row;
+zero is an empty basket, since drawing nothing at all says nothing.
 
 ## Persistence
 
@@ -206,8 +210,9 @@ Written through a small `$state`-backed store module so nothing else touches
 - [x] **M3a** — stroke data for all 62 glyphs, verified on a contact sheet
 - [x] **M3b** — tracing engine, flashing arrow, three-tier stars, grid with
       best-ever ratings, trace screen
-- [ ] **M4** — splash screen, PWA manifest + service worker, GitHub Pages deploy
-- [ ] **M5** — 26 word illustrations in Poster style + 10 digit counting scenes
+- [x] **M4** — splash screen, PWA manifest + service worker, GitHub Pages deploy
+      (live at https://mckoss.com/letter-tracer/)
+- [x] **M5** — 26 word illustrations in Poster style + 10 digit counting scenes
 - [ ] **M6** — polish: difficulty setting, progress calendar, optional audio
       toggle, reduced-motion pass
 

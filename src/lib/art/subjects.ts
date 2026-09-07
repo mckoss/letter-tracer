@@ -519,4 +519,122 @@ export const SUBJECTS: Record<string, Subject> = {
 	]
 };
 
+// --- counting scenes -------------------------------------------------------
+//
+// Digits get a countable scene rather than a word picture: the numeral teaches
+// the shape, the scene teaches what the shape means. Arrangements follow the
+// familiar dice/ten-frame patterns, which are easier to subitise than a row.
+
+const COUNT_LAYOUTS: Record<number, [number, number][]> = {
+	1: [[100, 102]],
+	2: [
+		[66, 102],
+		[134, 102]
+	],
+	3: [
+		[100, 58],
+		[66, 136],
+		[134, 136]
+	],
+	4: [
+		[68, 68],
+		[132, 68],
+		[68, 136],
+		[132, 136]
+	],
+	5: [
+		[66, 64],
+		[134, 64],
+		[100, 102],
+		[66, 140],
+		[134, 140]
+	],
+	6: [
+		[66, 58],
+		[134, 58],
+		[66, 102],
+		[134, 102],
+		[66, 146],
+		[134, 146]
+	],
+	7: [
+		[60, 56],
+		[100, 56],
+		[140, 56],
+		[100, 102],
+		[60, 148],
+		[100, 148],
+		[140, 148]
+	],
+	8: [
+		[60, 56],
+		[100, 56],
+		[140, 56],
+		[60, 102],
+		[140, 102],
+		[60, 148],
+		[100, 148],
+		[140, 148]
+	],
+	9: [
+		[58, 56],
+		[100, 56],
+		[142, 56],
+		[58, 102],
+		[100, 102],
+		[142, 102],
+		[58, 148],
+		[100, 148],
+		[142, 148]
+	]
+};
+
+const COUNT_COLORS = [P.red, P.teal, P.yellow, P.green, P.purple, P.orange, P.blue, P.pink, P.gold];
+
+function countScene(n: number): Prim[] {
+	// Zero is the hard one: an empty basket says "none" in a way that drawing
+	// nothing at all cannot.
+	if (n === 0) {
+		return [
+			{
+				k: 'path',
+				d: 'M20 96 C 30 176, 170 176, 180 96 C 158 126, 42 126, 20 96 Z',
+				fill: P.brown,
+				shade: true
+			},
+			{
+				k: 'line',
+				d: 'M28 116 C 70 144, 130 144, 172 116 M36 138 C 74 160, 126 160, 164 138',
+				color: P.tan,
+				w: 4.5
+			}
+		];
+	}
+	const spots = COUNT_LAYOUTS[n];
+	// Counters must read as separate things, so they shrink as the grid fills.
+	const r = n <= 3 ? 30 : n <= 6 ? 25 : 19;
+	return spots.map(([cx, cy], i) => ({
+		k: 'circle',
+		o: { cx, cy, r },
+		fill: COUNT_COLORS[i % COUNT_COLORS.length],
+		shade: true
+	}));
+}
+
+const NUMBER_NAMES = [
+	'zero',
+	'one',
+	'two',
+	'three',
+	'four',
+	'five',
+	'six',
+	'seven',
+	'eight',
+	'nine'
+];
+for (const [n, name] of NUMBER_NAMES.entries()) {
+	SUBJECTS[name] = () => countScene(n);
+}
+
 export const SUBJECT_NAMES = Object.keys(SUBJECTS);
