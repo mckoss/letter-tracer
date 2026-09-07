@@ -113,6 +113,28 @@ not the same as setting off from one.
 No child ever loses a letter or a star for bad order; the difference is only in
 how much the app cheers. _(Assumption, easily changed: 2 stars vs 1.)_
 
+### The ink knows nothing about the strokes
+
+**One touch makes one line.** It runs from where the finger went down to where
+it came up, through every point it actually visited. Nothing about stroke
+matching may reach into it: the line is never snapped to a guide, never extended
+to a stroke's end, never re-coloured, re-assigned to a different stroke, or
+rubbed out because the matching went one way or the other. A child who draws a
+wobble sees their wobble, and a line drawn nowhere near the letter stays on the
+screen exactly as drawn.
+
+Everything about strokes is bookkeeping running alongside: it moves the arrow
+on, decides when the letter is finished, and works out the stars. Keeping the
+two apart is what makes the drawing honest — and it is also load-bearing for the
+scoring, since a score computed from ink the app itself tidied up would be
+measuring its own work.
+
+Two bugs came from breaking this rule, and both looked like something else:
+ink that stopped ~12% short at the end of the last stroke (the completion
+threshold froze the drawing while the finger was still moving), and grey smudges
+left at stroke junctions (a stroke armed mid-gesture and then abandoned took its
+line with it).
+
 ## Core design: the tracing engine
 
 Per armed stroke:
@@ -130,12 +152,11 @@ Per armed stroke:
    sloppy the finger was, which teaches nothing; drawing the real trail shows
    the child their own line and lets the score measure how close it ran.
 5. Stroke completes at ≥88% progress under the finger, or ≥75% if the finger
-   lifts there. Either way the trail is run out to the stroke's true end so the
-   child's line has no gap they never made.
+   lifts there.
 6. A still-down finger then enters the linking state, and may pick up any other
    incomplete stroke it sets off from.
-7. `pointerup` early → the partial line stays on screen as uncounted grey ink,
-   and the stroke is free to retry from clean.
+7. `pointerup` early → nothing happens to the line; the stroke is simply still
+   incomplete, and free to retry.
 
 Tolerances scale with rendered glyph height `H`: `tolerance ≈ 0.14H`,
 `startRadius ≈ 0.16H`. These become a difficulty setting later.

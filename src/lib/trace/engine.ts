@@ -199,20 +199,6 @@ export function resolveStart(
 }
 
 /**
- * Closest approach to a stroke as a whole, ignoring how far along it the finger
- * has got. Used to tell a finger running out the last of a stroke it has already
- * completed from one that has genuinely wandered off.
- */
-export function distanceTo(s: StrokeSample, p: Pt): number {
-	let best = Infinity;
-	for (const q of s.pts) {
-		const d = d2(q, p);
-		if (d < best) best = d;
-	}
-	return Math.sqrt(best);
-}
-
-/**
  * The point on the stroke nearest the finger, searching only forward from where
  * the child has already got to. `dist` is how far off the guide they are, which
  * is what the accuracy score is built from.
