@@ -41,10 +41,10 @@ export const UPPER: Record<string, string[]> = {
 	L: ['M28 10 L28 110', 'M28 110 L72 110'],
 	M: ['M22 10 L22 110', 'M22 10 L50 66', 'M50 66 L78 10', 'M78 10 L78 110'],
 	N: ['M24 10 L24 110', 'M24 10 L76 110', 'M76 10 L76 110'],
-	O: ['M50 10 C26 10 18 34 18 60 C18 86 26 110 50 110 C74 110 82 86 82 60 C82 34 74 10 50 10 Z'],
+	O: ['M50 10 C32 10 18 32 18 60 C18 88 32 110 50 110 C68 110 82 88 82 60 C82 32 68 10 50 10 Z'],
 	P: ['M26 10 L26 110', 'M26 10 L54 10 C76 10 76 62 54 62 L26 62'],
 	Q: [
-		'M50 10 C26 10 18 34 18 60 C18 86 26 110 50 110 C74 110 82 86 82 60 C82 34 74 10 50 10 Z',
+		'M50 10 C32 10 18 32 18 60 C18 88 32 110 50 110 C68 110 82 88 82 60 C82 32 68 10 50 10 Z',
 		'M58 88 L84 118'
 	],
 	R: ['M26 10 L26 110', 'M26 10 L54 10 C76 10 76 62 54 62 L26 62', 'M26 62 L76 110'],
@@ -60,7 +60,7 @@ export const UPPER: Record<string, string[]> = {
 
 export const LOWER: Record<string, string[]> = {
 	a: ['M66 72 C58 58 32 58 32 85 C32 112 58 112 66 98', 'M66 60 L66 110'],
-	b: ['M28 10 L28 110', 'M28 85 C28 62 76 62 76 85 C76 108 28 108 28 85'],
+	b: ['M28 10 L28 110', 'M28 85 C28 53 76 53 76 85 C76 117 28 117 28 85'],
 	c: ['M70 74 C62 58 30 58 30 85 C30 112 62 112 70 96'],
 	d: ['M74 72 C66 58 30 58 30 85 C30 112 66 112 74 98', 'M74 10 L74 110'],
 	e: ['M28 86 L72 86 C72 62 32 58 30 85 C28 112 58 114 70 100'],
@@ -74,7 +74,7 @@ export const LOWER: Record<string, string[]> = {
 	m: ['M28 60 L28 110', 'M28 76 C28 58 50 58 50 76 L50 110', 'M50 76 C50 58 72 58 72 76 L72 110'],
 	n: ['M30 60 L30 110', 'M30 76 C30 58 72 58 72 76 L72 110'],
 	o: ['M50 58 C34 58 24 70 24 85 C24 100 34 112 50 112 C66 112 76 100 76 85 C76 70 66 58 50 58 Z'],
-	p: ['M28 60 L28 138', 'M28 84 C28 62 76 62 76 84 C76 106 28 106 28 84'],
+	p: ['M28 60 L28 138', 'M28 85 C28 53 76 53 76 85 C76 117 28 117 28 85'],
 	q: ['M70 72 C62 58 30 58 30 85 C30 112 62 112 70 98', 'M70 60 L70 138'],
 	r: ['M32 60 L32 110', 'M32 76 C32 62 56 58 68 64'],
 	s: ['M68 70 C62 56 32 56 32 72 C32 88 68 84 68 100 C68 116 36 116 30 104'],
@@ -88,8 +88,11 @@ export const LOWER: Record<string, string[]> = {
 };
 
 export const DIGITS: Record<string, string[]> = {
-	'0': ['M50 10 C28 10 20 32 20 60 C20 88 28 110 50 110 C72 110 80 88 80 60 C80 32 72 10 50 10 Z'],
-	'1': ['M32 30 L50 12', 'M50 12 L50 110'],
+	'0': ['M50 10 C33 10 20 32 20 60 C20 88 33 110 50 110 C67 110 80 88 80 60 C80 32 67 10 50 10 Z'],
+	// No flag: US manuscript (Zaner-Bloser, D'Nealian, Handwriting Without Tears)
+	// all teach 1 as a single line down. The flag is a European handwriting
+	// convention -- restore it as a first stroke 'M32 30 L50 12' if that is wanted.
+	'1': ['M50 10 L50 110'],
 	'2': ['M24 34 C26 12 66 6 72 30 C78 54 40 76 22 110 L78 110'],
 	'3': ['M24 28 C32 8 72 12 70 36 C68 56 48 60 44 60 C48 60 74 62 74 86 C74 112 30 114 22 92'],
 	'4': ['M60 10 L20 76 L80 76', 'M60 10 L60 110'],
@@ -98,7 +101,7 @@ export const DIGITS: Record<string, string[]> = {
 		'M68 18 C50 10 26 32 24 70 C22 96 38 112 54 112 C70 112 80 100 80 86 C80 70 64 60 48 64 C36 67 27 74 24 84'
 	],
 	'7': ['M22 12 L78 12 L44 110'],
-	'8': ['M50 60 C26 56 24 14 50 12 C76 14 74 56 50 60 C22 64 18 108 50 110 C82 108 78 64 50 60 Z'],
+	'8': ['M50 12 C21 12 21 56 50 56 C14 56 14 110 50 110 C86 110 86 56 50 56 C79 56 79 12 50 12 Z'],
 	'9': [
 		'M70 34 C70 18 56 10 44 14 C30 18 24 32 28 44 C32 57 48 63 60 57 C66 54 70 46 70 38 L70 110'
 	]
@@ -116,22 +119,9 @@ export const SET_LABELS: Record<StrokeSet, string> = {
 	digits: '123'
 };
 
-/**
- * Presentation orders. `alpha` is what a parent expects; `easy` groups by motor
- * difficulty the way Handwriting Without Tears does -- straight lines first,
- * then curves, diagonals last -- so a child succeeds sooner.
- */
-export const ORDERS: Record<StrokeSet, { alpha: string[]; easy: string[] }> = {
-	upper: {
-		alpha: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
-		easy: [...'LFEHTIUCOQGSJRBPDAKMNVWXYZ']
-	},
-	lower: {
-		alpha: [...'abcdefghijklmnopqrstuvwxyz'],
-		easy: [...'cosvwtadguielkyjprnmhbfqxz']
-	},
-	digits: {
-		alpha: [...'0123456789'],
-		easy: [...'1740235698']
-	}
+/** Presentation order for each set. */
+export const ORDER: Record<StrokeSet, string[]> = {
+	upper: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+	lower: [...'abcdefghijklmnopqrstuvwxyz'],
+	digits: [...'0123456789']
 };

@@ -59,6 +59,16 @@ start dots and a direction arrow per stroke.
 A stroke shorter than `DOT_LENGTH` (the tittle on `i` and `j`) is a dot: it
 renders as a round cap and completes on a tap rather than a drag.
 
+Digit `1` is a single vertical line with no flag, which is what US manuscript
+teaches; the flag is a European handwriting convention. `7` likewise has no
+crossbar. Round bowls (`b p 8 0 O Q`) place their Bezier control points at
+`4/3 * r` for a half arc and `0.5523 * r` for a quarter — at `1 * r` the curve
+only reaches about three quarters of the radius and reads as a flattened
+ellipse.
+
+`src/routes/glyphs` renders the whole set for review, with numbered start dots
+and a direction arrow per stroke.
+
 ## Stroke order
 
 Correct stroke order is the thing actually being taught, so the app teaches it
@@ -192,9 +202,9 @@ Written through a small `$state`-backed store module so nothing else touches
 - [x] **M1** — repo, scaffold, Node pin, this plan
 - [x] **M2** — art style samples → **Poster** chosen
 - [x] **M3a** — stroke data for all 62 glyphs, verified on a contact sheet
-- [ ] **M3b** — tracing engine, flashing arrow, two-tier celebration, trace screen
-- [ ] **M4** — splash, home, grid picker, order toggle, scoring, PWA manifest +
-      service worker, GitHub Pages deploy
+- [x] **M3b** — tracing engine, flashing arrow, three-tier stars, grid with
+      best-ever ratings, trace screen
+- [ ] **M4** — splash screen, PWA manifest + service worker, GitHub Pages deploy
 - [ ] **M5** — 26 word illustrations in Poster style + 10 digit counting scenes
 - [ ] **M6** — polish: difficulty setting, progress calendar, optional audio
       toggle, reduced-motion pass
@@ -208,12 +218,18 @@ Written through a small `$state`-backed store module so nothing else touches
   variants), a set picker that scales past three options, and word pictures
   chosen for the kana rather than the letter. The guide box would want a square
   aspect rather than the current ascender/descender ruling.
+- **Greek and Cyrillic sets.** Both are close enough to Latin in construction
+  that the existing guide ruling and engine carry over unchanged; the work is
+  the stroke data (24 Greek letters, 33 Cyrillic, each in two cases) and word
+  pictures chosen for the letter in that language rather than translated from
+  the English list.
 - Cursive / D'Nealian as an alternate letterform set.
 - Left-handed mode (mirror the arrow offset so the hand doesn't cover the guide).
 
 ## Open questions
 
-1. **What counts as a star** — plan assumes 2 for taught order, 1 otherwise,
-   never zero.
-2. **Lowercase `a` and `g`** — plan assumes single-story, which is what US
+1. **Lowercase `a` and `g`** — plan assumes single-story, which is what US
    manuscript teaches.
+2. **Tolerances** — `TOLERANCE` 11 and `START_RADIUS` 13 user units are a first
+   guess. They want testing with an actual toddler thumb, and should probably
+   become the difficulty setting in M6.
