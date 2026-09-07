@@ -214,16 +214,18 @@ export const SUBJECTS: Record<string, Subject> = {
 		...eye(118, 88, 6)
 	],
 
-	hat: () => [
-		{ k: 'ellipse', o: { cx: 100, cy: 152, rx: 76, ry: 22 }, fill: P.navy, shade: true },
+	// Side view: the sausage is drawn first and runs longer than the buns, so it
+	// shows at both ends and through the gap between the halves.
+	hotdog: () => [
+		{ k: 'rect', x: 16, y: 86, w: 168, h: 54, rx: 27, fill: P.rust, shade: true },
+		{ k: 'rect', x: 26, y: 62, w: 148, h: 44, rx: 22, fill: P.sand, shade: true },
+		{ k: 'rect', x: 26, y: 120, w: 148, h: 44, rx: 22, fill: P.sand, shade: true },
 		{
-			k: 'path',
-			d: 'M62 152 L66 58 C 66 46, 134 46, 134 58 L138 152 Z',
-			fill: P.navy,
-			shade: true
-		},
-		{ k: 'rect', x: 62, y: 118, w: 76, h: 22, fill: P.red, shade: true, soft: true },
-		{ k: 'ellipse', o: { cx: 100, cy: 56, rx: 34, ry: 11 }, fill: P.slate, shade: true, soft: true }
+			k: 'line',
+			d: 'M46 118 L60 108 L74 118 L88 108 L102 118 L116 108 L130 118 L144 108 L156 117',
+			color: P.yellow,
+			w: 6
+		}
 	],
 
 	igloo: () => [

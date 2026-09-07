@@ -165,7 +165,7 @@ Subjects describe themselves as a list of primitives; the style decides fill,
 outline and shading. Adding a style never touches a drawing.
 `src/routes/styles` renders the candidates side by side.
 
-**Word list:** apple · blaze · cat · dog · elephant · fish · goat · hat · igloo ·
+**Word list:** apple · blaze · cat · dog · elephant · fish · goat · hotdog · igloo ·
 juice · kite · leaf · moon · nest · orange · penguin · queen · rainbow · sun ·
 tree · umbrella · violin · whale · xylophone · yoyo · zebra
 

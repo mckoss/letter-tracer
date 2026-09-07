@@ -10,7 +10,7 @@ export const WORDS: Record<string, string> = {
 	e: 'elephant',
 	f: 'fish',
 	g: 'goat',
-	h: 'hat',
+	h: 'hotdog',
 	i: 'igloo',
 	j: 'juice',
 	k: 'kite',
