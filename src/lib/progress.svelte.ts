@@ -18,13 +18,15 @@ export type Store = {
 	/** char -> best stars ever earned on it. Absent means never completed. */
 	best: Record<string, Best>;
 	lastSet: StrokeSet;
+	muted: boolean;
 };
 
 const empty = (): Store => ({
 	version: 1,
 	days: {},
 	best: {},
-	lastSet: 'upper'
+	lastSet: 'upper',
+	muted: false
 });
 
 /** Local calendar date, not UTC -- "days the child played" is a local idea. */
@@ -70,7 +72,7 @@ class Progress {
 		this.#save();
 	}
 
-	setPrefs(patch: Partial<Pick<Store, 'lastSet'>>) {
+	setPrefs(patch: Partial<Pick<Store, 'lastSet' | 'muted'>>) {
 		Object.assign(this.data, patch);
 		this.#save();
 	}

@@ -8,6 +8,7 @@
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import Stars from '$lib/components/Stars.svelte';
+	import { play, unlock } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
 	import type { Stars as StarCount } from '$lib/trace/engine';
 
@@ -28,6 +29,9 @@
 	const subject = $derived(ART[char?.toLowerCase()]);
 
 	function open(i: number, all = false) {
+		// Opening a glyph is a real tap, which is the only moment iOS will let us
+		// prime the audio elements.
+		unlock();
 		index = i;
 		playAll = all;
 		earned = null;
@@ -38,6 +42,7 @@
 		progress.record(char, stars);
 		// Everyone gets a burst; how big it is says how the letter went.
 		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
+		if (!progress.data.muted) play(stars === 1 ? 'sad' : 'cheer', stars === 3 ? 1 : 0.65);
 		earned = stars;
 		if (playAll && index < chars.length - 1) {
 			index += 1;
@@ -76,16 +81,35 @@
 <div class="app" class:tracing={view === 'trace'}>
 	<header>
 		{#if view === 'trace'}
-			<button class="icon" onclick={() => (view = 'grid')} aria-label="Back to the grid"
-				>&larr;</button
-			>
+			<button class="home" onclick={() => (view = 'grid')} aria-label="Back to all the letters">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<rect x="21.5" y="6.5" width="3.6" height="6" rx="1" fill="#9e3a31" />
+					<path d="M2.5 16 L16 4 L29.5 16 Z" fill="#c34c3e" />
+					<rect x="6.5" y="15" width="19" height="13" rx="2" fill="#d89a4a" />
+					<rect x="13.2" y="19.5" width="5.6" height="8.5" rx="2.6" fill="#3e7c7b" />
+					<rect x="8.8" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
+					<rect x="19.6" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
+				</svg>
+			</button>
 		{:else}
 			<span class="brand">Letter Tracer</span>
 		{/if}
-		<span class="score" aria-label="{progress.todayStars} stars today">
-			&#9733;
-			{progress.todayStars}
-		</span>
+		<div class="right">
+			{#if view === 'grid'}
+				<button
+					class="mute"
+					onclick={() => progress.setPrefs({ muted: !progress.data.muted })}
+					aria-pressed={progress.data.muted}
+					aria-label={progress.data.muted ? 'Turn sound on' : 'Turn sound off'}
+				>
+					{progress.data.muted ? '\u{1F507}' : '\u{1F50A}'}
+				</button>
+			{/if}
+			<span class="score" aria-label="{progress.todayStars} stars today">
+				&#9733;
+				{progress.todayStars}
+			</span>
+		</div>
 	</header>
 
 	{#if view === 'grid'}
@@ -188,13 +212,37 @@
 		font-weight: 700;
 		color: #d89a4a;
 	}
-	.icon {
+	.right {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.home {
 		border: 0;
 		background: none;
-		font-size: 22px;
-		color: #6b6072;
+		padding: 0;
+		width: 46px;
+		height: 46px;
 		cursor: pointer;
-		padding: 4px 8px;
+		display: grid;
+		place-items: center;
+		border-radius: 14px;
+	}
+	.home:active {
+		background: #f0e8db;
+	}
+	.home svg {
+		width: 38px;
+		height: 38px;
+	}
+	.mute {
+		border: 0;
+		background: none;
+		font-size: 19px;
+		line-height: 1;
+		padding: 6px;
+		cursor: pointer;
+		opacity: 0.75;
 	}
 
 	.picker {

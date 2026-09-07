@@ -213,7 +213,12 @@
 		<g class="arrow" class:nudge>
 			{#if !arrow.isDot}
 				<g transform="translate({arrow.start.x} {arrow.start.y}) rotate({arrow.angle})">
-					<path class="head" d="M18 0 L8.5 -6.5 L8.5 6.5 Z" />
+					<!-- A real arrow, shaft and head, bouncing along its own +x -- which
+					     the rotation above has already aimed down the stroke. -->
+					<g class="arrow-body">
+						<path class="shaft" d="M6 0 L14 0" />
+						<path class="head" d="M11.5 -5 L18.5 0 L11.5 5 Z" />
+					</g>
 				</g>
 			{/if}
 			<circle class="ring" cx={arrow.start.x} cy={arrow.start.y} r="7" />
@@ -280,6 +285,17 @@
 	.knob {
 		fill: #c34c3e;
 	}
+	.shaft {
+		fill: none;
+		stroke: #c34c3e;
+		stroke-width: 4;
+		stroke-linecap: round;
+	}
+	/* Two bounces a second, in the direction of travel: motion says "this way"
+	   far more clearly than a static triangle does. */
+	.arrow-body {
+		animation: lunge 0.5s ease-in-out infinite;
+	}
 	.ring {
 		fill: none;
 		stroke: #c34c3e;
@@ -289,10 +305,21 @@
 	.nudge {
 		animation: shake 420ms ease-in-out;
 	}
+	@keyframes lunge {
+		0% {
+			transform: translateX(0);
+		}
+		45% {
+			transform: translateX(5px);
+		}
+		100% {
+			transform: translateX(0);
+		}
+	}
 	@keyframes flash {
 		0%,
 		100% {
-			opacity: 0.45;
+			opacity: 0.7;
 		}
 		50% {
 			opacity: 1;
@@ -322,6 +349,7 @@
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.arrow,
+		.arrow-body,
 		.ring,
 		.nudge {
 			animation: none;
