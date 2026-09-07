@@ -53,9 +53,8 @@ export function unlock() {
  * by the time a letter opens the gesture may be over.
  */
 let voice: HTMLAudioElement | null = null;
-/** Whatever is playing, so a prompt can wait its turn. */
-let sounding: HTMLAudioElement | null = null;
-let queued: ReturnType<typeof setTimeout> | null = null;
+/** The celebration currently sounding, if any. Prompts keep out of its way. */
+let cueing: HTMLAudioElement | null = null;
 
 function voiceEl(): HTMLAudioElement | null {
 	if (!browser) return null;
@@ -71,58 +70,43 @@ export function play(cue: Cue, volume = 1) {
 	if (!a) return;
 	a.volume = volume;
 	a.currentTime = 0;
-	sounding = a;
+	cueing = a;
 	a.play().catch(() => {
 		// Autoplay policy, or no gesture yet. Silence is not worth an error.
 	});
 }
 
-/** Milliseconds until nothing is playing, so a prompt does not talk over it. */
-function quietIn(): number {
-	if (!sounding || sounding.paused || sounding.ended) return 0;
-	const left = (sounding.duration || 0) - sounding.currentTime;
-	return Number.isFinite(left) && left > 0 ? left * 1000 + GAP : 0;
+/** Is a celebration sounding right now? */
+function celebrating(): boolean {
+	return !!cueing && !cueing.paused && !cueing.ended;
 }
-
-/** A beat of silence after the cheer before the next letter is announced. */
-const GAP = 250;
 
 /**
  * Say "A is for apple" for a letter, if that letter has been recorded.
  *
- * Letters arrive on a celebration: finishing one glyph opens the next while the
- * cheer is still ringing, so the prompt waits for the noise to stop rather than
- * shouting over it. Only the newest request survives -- a child tapping through
- * letters should hear the one they landed on, not a backlog.
+ * Nothing is ever spoken across a celebration. Finishing a glyph opens the next
+ * one while the cheer or the trombone is still going, and a voice arriving on
+ * top of that -- or queued up to follow it, so the child waits five seconds
+ * before they can draw -- is worse than staying quiet. The letter is announced
+ * when it is opened from the grid or by tapping through, which is when a child
+ * is choosing rather than being congratulated.
+ *
+ * Asking the element rather than timing it: a duration is not known until the
+ * metadata loads, and on the first celebration of a cold start it is NaN.
  */
 export function speak(char: string) {
-	if (queued !== null) {
-		clearTimeout(queued);
-		queued = null;
-	}
 	const key = char.toLowerCase();
 	const a = voiceEl();
-	if (!a || !PHRASES.includes(key)) return;
+	if (!a || celebrating() || !PHRASES.includes(key)) return;
 	a.pause();
-	const start = () => {
-		queued = null;
-		a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
-		a.currentTime = 0;
-		sounding = a;
-		a.play().catch(() => {
-			// Not unlocked yet, or the file is not there. Quiet is fine.
-		});
-	};
-	const wait = quietIn();
-	if (wait <= 0) start();
-	else queued = setTimeout(start, wait);
+	a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
+	a.currentTime = 0;
+	a.play().catch(() => {
+		// Not unlocked yet, or the file is not there. Quiet is fine.
+	});
 }
 
-/** Stop a prompt and cancel one that is waiting -- on leaving the glyph. */
+/** Stop a prompt part way -- on leaving the glyph. */
 export function hush() {
-	if (queued !== null) {
-		clearTimeout(queued);
-		queued = null;
-	}
 	voice?.pause();
 }
