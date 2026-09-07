@@ -19,7 +19,6 @@
 	let set = $state<StrokeSet>(progress.data.lastSet);
 	let view = $state<'grid' | 'trace'>('grid');
 	let index = $state(0);
-	let playAll = $state(false);
 	let earned = $state<StarCount | null>(null);
 	let confetti: Confetti | undefined = $state();
 	let stage: TraceStage | undefined = $state();
@@ -31,16 +30,35 @@
 	const char = $derived(chars[index] ?? chars[0]);
 	const picture = $derived(art(wordKey(char), 96));
 
-	function open(i: number, all = false) {
+	/**
+	 * How long the stars and confetti stay up before the next letter arrives. The
+	 * stage has already held the finished letter for 1.1--1.5s of its own, so this
+	 * is the tail of the celebration, not the whole of it.
+	 */
+	const CELEBRATE_MS = 1400;
+	let advancing: ReturnType<typeof setTimeout> | null = null;
+
+	function stopAdvance() {
+		if (advancing === null) return;
+		clearTimeout(advancing);
+		advancing = null;
+	}
+
+	function open(i: number) {
 		// Opening a glyph is a real tap, which is the only moment iOS will let us
 		// prime the audio elements.
 		unlock();
+		stopAdvance();
 		const wasGrid = view === 'grid';
 		index = i;
-		playAll = all;
 		earned = null;
 		view = 'trace';
 		if (wasGrid) history.pushState({ lt: 'trace' }, '');
+	}
+
+	function step(by: 1 | -1) {
+		const i = index + by;
+		if (i >= 0 && i < chars.length) open(i);
 	}
 
 	function done(stars: StarCount) {
@@ -49,16 +67,19 @@
 		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
 		if (!progress.data.muted) play(stars === 1 ? 'sad' : 'cheer', stars === 3 ? 1 : 0.65);
 		earned = stars;
-		if (playAll && index < chars.length - 1) {
-			index += 1;
-			earned = null;
-		} else if (playAll) {
-			playAll = false;
-			view = 'grid';
-		}
+		// Finish a letter and the next one comes to you. A child who has just been
+		// cheered at should not have to find a button to keep going -- and the last
+		// letter of the set hands them back to the grid.
+		stopAdvance();
+		advancing = setTimeout(() => {
+			advancing = null;
+			if (index < chars.length - 1) open(index + 1);
+			else goGrid();
+		}, CELEBRATE_MS);
 	}
 
 	function goGrid() {
+		stopAdvance();
 		view = 'grid';
 		earned = null;
 	}
@@ -174,7 +195,7 @@
 			{/each}
 		</div>
 
-		<button class="play" onclick={() => open(0, true)}>Play all &rarr;</button>
+		<button class="play" onclick={() => open(0)}>Play all &rarr;</button>
 
 		<PlayHistory />
 	{:else}
@@ -197,27 +218,58 @@
 
 		<nav class="nav">
 			<button
-				class="erase"
-				onclick={() => {
-					earned = null;
-					stage?.reset();
-				}}
-				aria-label="Rub it out and start this letter again"
+				class="step"
+				onclick={() => step(-1)}
+				disabled={index === 0}
+				aria-label="The letter before this one"
 			>
 				<svg viewBox="0 0 32 32" aria-hidden="true">
-					<g transform="rotate(-28 16 16)">
-						<path d="M3.5 16 L9 8.5 L23 8.5 L28.5 16 L23 23.5 L9 23.5 Z" fill="#ef9aa4" />
-						<path d="M3.5 16 L9 23.5 L23 23.5 L28.5 16 Z" fill="#d87d8b" />
-						<path d="M9 8.5 L23 8.5 L25.4 11.8 L11.4 11.8 Z" fill="#f7bcc2" />
+					<!-- A second circle peeping out below is the poster drop shadow the
+					     house and the eraser use, without any arc arithmetic. -->
+					<circle cx="16" cy="17.3" r="14.4" fill="#2f6362" />
+					<circle cx="16" cy="16" r="14.4" fill="#3e7c7b" />
+					<g fill="#f7efdd" transform="translate(32 0) scale(-1 1)">
+						<rect x="7.6" y="14.1" width="8" height="3.8" rx="1.9" />
+						<path d="M13.2 8.6 L22.4 16 L13.2 23.4 Z" />
 					</g>
 				</svg>
 			</button>
-			<button onclick={() => open(Math.max(0, index - 1))} disabled={index === 0}>&larr;</button>
-			<span>{index + 1} / {chars.length}</span>
+
+			<div class="mid">
+				<button
+					class="erase"
+					onclick={() => {
+						earned = null;
+						stage?.reset();
+					}}
+					aria-label="Rub it out and start this letter again"
+				>
+					<svg viewBox="0 0 32 32" aria-hidden="true">
+						<g transform="rotate(-28 16 16)">
+							<path d="M3.5 16 L9 8.5 L23 8.5 L28.5 16 L23 23.5 L9 23.5 Z" fill="#ef9aa4" />
+							<path d="M3.5 16 L9 23.5 L23 23.5 L28.5 16 Z" fill="#d87d8b" />
+							<path d="M9 8.5 L23 8.5 L25.4 11.8 L11.4 11.8 Z" fill="#f7bcc2" />
+						</g>
+					</svg>
+				</button>
+				<span class="count">{index + 1} / {chars.length}</span>
+			</div>
+
 			<button
-				onclick={() => open(Math.min(chars.length - 1, index + 1))}
-				disabled={index === chars.length - 1}>&rarr;</button
+				class="step"
+				onclick={() => step(1)}
+				disabled={index === chars.length - 1}
+				aria-label="The next letter"
 			>
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<circle cx="16" cy="17.3" r="14.4" fill="#2f6362" />
+					<circle cx="16" cy="16" r="14.4" fill="#3e7c7b" />
+					<g fill="#f7efdd">
+						<rect x="7.6" y="14.1" width="8" height="3.8" rx="1.9" />
+						<path d="M13.2 8.6 L22.4 16 L13.2 23.4 Z" />
+					</g>
+				</svg>
+			</button>
 		</nav>
 	{/if}
 	{#if leaveHint}
@@ -417,21 +469,42 @@
 		flex: 0 0 auto;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: 22px;
-		padding: 10px 0 14px;
-		color: #8a8090;
-		font-size: 14px;
+		justify-content: space-between;
+		gap: 12px;
+		/* The bottom padding also keeps the next button clear of the version badge
+		   pinned in the corner. */
+		padding: 6px 18px calc(22px + env(safe-area-inset-bottom));
 	}
-	.nav button {
-		border: 1px solid #e3ddd4;
-		background: #fff;
-		border-radius: 999px;
-		width: 40px;
-		height: 40px;
-		font-size: 17px;
-		color: #6b6072;
+	.mid {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1px;
+	}
+	.count {
+		color: #8a8090;
+		font-size: 13px;
+	}
+	/* Toddler-sized, and drawn in the same poster hand as the house and the
+	   eraser -- the old pair were 40px outline pills with a text arrow in them,
+	   which read as browser chrome rather than as part of the app. */
+	.step {
+		border: 0;
+		background: none;
+		padding: 0;
+		width: 68px;
+		height: 68px;
+		border-radius: 50%;
 		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.step svg {
+		width: 68px;
+		height: 68px;
+		display: block;
+	}
+	.step:active:not(:disabled) svg {
+		transform: scale(0.93);
 	}
 	.home,
 	.erase {
@@ -450,6 +523,14 @@
 		width: 34px;
 		height: 34px;
 	}
+	.erase {
+		width: 58px;
+		height: 58px;
+	}
+	.erase svg {
+		width: 44px;
+		height: 44px;
+	}
 	.home svg {
 		width: 38px;
 		height: 38px;
@@ -458,8 +539,11 @@
 	.erase:active {
 		background: #f0e8db;
 	}
-	.nav button:disabled {
-		opacity: 0.35;
+	/* At the ends of the set. Faded, but still legible as a button rather than a
+	   ghost -- 0.35 opacity made it vanish. */
+	.step:disabled {
+		opacity: 0.4;
+		filter: grayscale(0.8);
 		cursor: default;
 	}
 </style>
