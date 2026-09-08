@@ -83,6 +83,11 @@ RATE = "-10%"
 # Listen to the 26 before trusting them.
 LETTER_TEXT: dict[str, str] = {c: c.upper() for c in "abcdefghijklmnopqrstuvwxyz"}
 
+# How to read a word that a speech engine gets wrong on sight. This changes only
+# what is said, never what the app shows -- the screen still reads SUV. Spacing
+# the letters is what stops "suv" being read as a syllable.
+SPOKEN: dict[str, str] = {"suv": "S U V"}
+
 # Loudness target, matching how sad-trombone.mp3 was normalised.
 LOUDNORM = "loudnorm=I=-16:TP=-1.5:LRA=11"
 # Anything under this counts as silence at the head and tail of a clip.
@@ -140,15 +145,19 @@ def phrase_line_list(letters: list[str] | None, word_set: str) -> list[tuple[str
 
     Named for the letter and the word both -- a-apple, g-garbage-truck -- so the
     word sets neither collide nor duplicate what they share. Case does not change
-    how a line is spoken, so A and a share one clip. Keep this in step with
-    `phraseStem` in src/lib/words.ts, which is how the app finds the file.
+    how a line is spoken, so A and a share one clip. The file is still named for
+    the word as written even when SPOKEN reads it differently. Keep this in step
+    with `phraseStem` in src/lib/words.ts, which is how the app finds the file.
     """
     words, _ = load_words(word_set)
     chosen = [c.lower() for c in (letters or sorted(words))]
     for c in chosen:
         if c not in words:
             sys.exit(f"{c!r} is not a letter with a word: pick from {''.join(sorted(words))}")
-    return [(f"{c}-{slug(words[c])}", f"{c.upper()} is for {words[c]}") for c in chosen]
+    return [
+        (f"{c}-{slug(words[c])}", f"{c.upper()} is for {SPOKEN.get(words[c], words[c])}")
+        for c in chosen
+    ]
 
 
 def write_manifest() -> None:
