@@ -862,17 +862,22 @@ const VEHICLE_SUBJECTS: Record<string, Subject> = {
 		...axle(60, 140, 148, 19)
 	],
 
-	digger: () => [
-		{ k: 'rect', x: 26, y: 134, w: 112, h: 32, rx: 16, fill: P.dark, shade: true },
-		{ k: 'circle', o: { cx: 46, cy: 150, r: 10 }, fill: P.grey, shade: true, soft: true },
-		{ k: 'circle', o: { cx: 118, cy: 150, r: 10 }, fill: P.grey, shade: true, soft: true },
-		{ k: 'rect', x: 42, y: 100, w: 84, h: 36, rx: 8, fill: P.yellow, shade: true },
-		{ k: 'rect', x: 48, y: 68, w: 46, h: 36, rx: 7, fill: P.yellow, shade: true },
-		{ k: 'rect', x: 56, y: 76, w: 30, h: 20, rx: 4, fill: P.sky, shade: true, soft: true },
-		// Boom, arm, bucket -- the three-jointed reach is the whole silhouette.
-		{ k: 'line', d: 'M116 108 L152 74', color: P.gold, w: 14 },
-		{ k: 'line', d: 'M152 74 L164 112', color: P.gold, w: 12 },
-		{ k: 'path', d: 'M154 110 L176 104 L174 132 L152 128 Z', fill: P.slate, shade: true }
+	'dump truck': () => [
+		{ k: 'rect', x: 24, y: 126, w: 152, h: 18, rx: 4, fill: P.slate, shade: true },
+		{ k: 'path', d: 'M92 126 L92 78 L176 68 L176 126 Z', fill: P.gold, shade: true },
+		// A load heaped above the sides is what says tipper rather than flatbed.
+		{
+			k: 'path',
+			d: 'M96 80 Q 120 62 144 72 Q 160 62 176 68 L176 82 L96 82 Z',
+			fill: P.brown,
+			shade: true
+		},
+		{ k: 'path', d: 'M26 126 L26 92 L44 92 L58 70 L86 70 L86 126 Z', fill: P.red, shade: true },
+		{ k: 'path', d: 'M50 92 L60 76 L80 76 L80 92 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 30, cy: 108, r: 6 }, fill: P.cream },
+		...wheel(58, 146, 20),
+		...wheel(126, 146, 20),
+		...wheel(156, 146, 20)
 	],
 
 	engine: () => [
@@ -1054,17 +1059,17 @@ const VEHICLE_SUBJECTS: Record<string, Subject> = {
 		{ k: 'rect', x: 68, y: 136, w: 64, h: 12, rx: 4, fill: P.slate, shade: true }
 	],
 
-	ship: () => [
-		{ k: 'line', d: 'M58 92 L58 54', color: P.tan, w: 5 },
-		{ k: 'rect', x: 78, y: 68, w: 46, h: 26, rx: 4, fill: P.white, shade: true },
-		{ k: 'rect', x: 128, y: 62, w: 22, h: 34, rx: 4, fill: P.rust, shade: true },
-		{ k: 'line', d: 'M130 72 H148', color: P.cream, w: 6 },
-		{ k: 'rect', x: 62, y: 92, w: 76, h: 36, rx: 5, fill: P.white, shade: true },
-		...glazing(86, 74, 9, 12, 3, 6),
-		...glazing(70, 102, 12, 14, 4, 7),
-		{ k: 'path', d: 'M22 128 L178 128 L158 166 L42 166 Z', fill: P.red, shade: true },
-		{ k: 'line', d: 'M32 140 H168', color: P.cream, w: 6 },
-		{ k: 'line', d: 'M36 176 Q 64 168 92 176 T 150 176', color: P.sky, w: 7 }
+	// Taller and squarer than the car, on bigger wheels: at this size that is the
+	// whole difference between the two, so the roofline is deliberately flat.
+	suv: () => [
+		{ k: 'rect', x: 22, y: 106, w: 156, h: 42, rx: 12, fill: P.moss, shade: true },
+		{ k: 'path', d: 'M40 108 L48 74 L152 74 L166 108 Z', fill: P.moss, shade: true },
+		{ k: 'line', d: 'M52 71 H148', color: P.dark, w: 5 },
+		{ k: 'path', d: 'M54 102 L60 80 L86 80 L86 102 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 92, y: 80, w: 32, h: 22, rx: 3, fill: P.sky, shade: true, soft: true },
+		{ k: 'path', d: 'M130 80 L146 80 L158 102 L130 102 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 172, cy: 120, r: 7 }, fill: P.cream },
+		...axle(58, 142, 148, 23)
 	],
 
 	truck: () => [
