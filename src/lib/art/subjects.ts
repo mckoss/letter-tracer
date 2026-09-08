@@ -400,23 +400,65 @@ export const SUBJECTS: Record<string, Subject> = {
 	],
 
 	queen: () => [
+		// Shoulders and gown, cut off by the backdrop disc.
 		{
 			k: 'path',
-			d: 'M50 178 C 54 128, 76 108, 100 108 C 124 108, 146 128, 150 178 Z',
+			d: 'M46 186 C 48 152, 70 138, 100 138 C 130 138, 152 152, 154 186 Z',
 			fill: P.purple,
 			shade: true
 		},
-		{ k: 'circle', o: { cx: 100, cy: 88, r: 40 }, fill: P.sand, shade: true },
+		{ k: 'rect', x: 88, y: 124, w: 24, h: 28, fill: P.sand, shade: true },
+		// Long hair behind, falling either side of the face.
 		{
 			k: 'path',
-			d: 'M60 56 L60 26 L78 42 L100 18 L122 42 L140 26 L140 56 Z',
-			fill: P.yellow,
+			d: 'M50 98 Q 38 160 58 186 Q 100 148 142 186 Q 162 160 150 98 Z',
+			fill: P.brown,
 			shade: true
 		},
-		{ k: 'circle', o: { cx: 100, cy: 30, r: 6 }, fill: P.red },
-		{ k: 'line', d: 'M92 104 q 8 8 16 0', color: P.dark, w: 3.6 },
-		...eye(86, 84, 6),
-		...eye(114, 84, 6)
+		{
+			k: 'path',
+			d: 'M65 95 Q 65 145 100 150 Q 135 145 135 95 Q 135 60 100 60 Q 65 60 65 95 Z',
+			fill: P.sand,
+			shade: true
+		},
+		{ k: 'circle', o: { cx: 78, cy: 121, r: 8 }, fill: P.pink, op: 0.45 },
+		{ k: 'circle', o: { cx: 122, cy: 121, r: 8 }, fill: P.pink, op: 0.45 },
+		// Almond eyes rather than the plain dots the animals use.
+		{ k: 'path', d: 'M74 105 Q 82 99 90 105 Q 82 111 74 105 Z', fill: P.white },
+		{ k: 'circle', o: { cx: 82, cy: 105, r: 4 }, fill: P.dark },
+		{ k: 'circle', o: { cx: 80.8, cy: 103.8, r: 1.5 }, fill: P.white },
+		{ k: 'path', d: 'M110 105 Q 118 99 126 105 Q 118 111 110 105 Z', fill: P.white },
+		{ k: 'circle', o: { cx: 118, cy: 105, r: 4 }, fill: P.dark },
+		{ k: 'circle', o: { cx: 116.8, cy: 103.8, r: 1.5 }, fill: P.white },
+		{ k: 'line', d: 'M72 95 Q 82 89 90 95 M110 95 Q 118 89 128 95', color: P.brown, w: 2.6 },
+		{ k: 'path', d: 'M100 107 L96 118 L100 120.5 L104 118 Z', fill: P.tan },
+		{ k: 'path', d: 'M90 132 Q 100 139 110 132 Q 100 145 90 132 Z', fill: P.rust },
+		// Fringe, swept from a centre parting.
+		{
+			k: 'path',
+			d: 'M100 60 Q 75 60 60 95 Q 55 80 65 60 Q 80 45 100 60 Z',
+			fill: P.brown,
+			shade: true
+		},
+		{
+			k: 'path',
+			d: 'M100 60 Q 125 60 140 95 Q 145 80 135 60 Q 120 45 100 60 Z',
+			fill: P.brown,
+			shade: true
+		},
+		{ k: 'path', d: 'M55 75 L70 30 L100 50 L130 30 L145 75 Z', fill: P.yellow, shade: true },
+		{
+			k: 'path',
+			d: 'M55 75 Q 100 85 145 75 L140 86 Q 100 96 60 86 Z',
+			fill: P.gold,
+			shade: true,
+			soft: true
+		},
+		{ k: 'circle', o: { cx: 70, cy: 46, r: 4 }, fill: P.red },
+		{ k: 'circle', o: { cx: 100, cy: 60, r: 5 }, fill: P.blue },
+		{ k: 'circle', o: { cx: 130, cy: 46, r: 4 }, fill: P.green },
+		{ k: 'circle', o: { cx: 85, cy: 74, r: 3 }, fill: P.teal },
+		{ k: 'circle', o: { cx: 115, cy: 74, r: 3 }, fill: P.teal }
 	],
 
 	rainbow: () => [
