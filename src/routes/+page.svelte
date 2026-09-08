@@ -10,7 +10,7 @@
 	import Splash from '$lib/components/Splash.svelte';
 	import PlayHistory from '$lib/components/PlayHistory.svelte';
 	import Stars from '$lib/components/Stars.svelte';
-	import { hush, play, speak, unlock } from '$lib/sound';
+	import { hush, play, speak, unlock, whenQuiet } from '$lib/sound';
 	import TraceStage from '$lib/components/TraceStage.svelte';
 	import type { Stars as StarCount } from '$lib/trace/engine';
 
@@ -31,16 +31,17 @@
 	const picture = $derived(art(wordKey(char), 96));
 
 	/**
-	 * How long the stars and confetti stay up before the next letter arrives. The
-	 * stage has already held the finished letter for 1.1--1.5s of its own, so this
-	 * is the tail of the celebration, not the whole of it.
+	 * A beat after the cheer has finished before the next letter arrives. The
+	 * cheer gets to run to its end -- cutting the applause short to hurry a child
+	 * along is a strange thing to do -- and this is only the pause after it. With
+	 * the sound off there is nothing to wait for, so it is also how long the stars
+	 * stay up on their own.
 	 */
-	const CELEBRATE_MS = 1400;
-	let advancing: ReturnType<typeof setTimeout> | null = null;
+	const AFTER_CHEER_MS = 700;
+	let advancing: (() => void) | null = null;
 
 	function stopAdvance() {
-		if (advancing === null) return;
-		clearTimeout(advancing);
+		advancing?.();
 		advancing = null;
 	}
 
@@ -71,15 +72,17 @@
 		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
 		if (!progress.data.muted) play(stars === 1 ? 'sad' : 'cheer', stars === 3 ? 1 : 0.65);
 		earned = stars;
-		// Finish a letter and the next one comes to you. A child who has just been
-		// cheered at should not have to find a button to keep going -- and the last
-		// letter of the set hands them back to the grid.
+		// Finish a letter and the next one comes to you, once the cheering is over.
+		// A child who has just been congratulated should not have to find a button
+		// to keep going -- and the last letter of the set hands them back to the
+		// grid. Waiting for quiet also means the new letter announces itself the
+		// moment it arrives, rather than after a silent pause.
 		stopAdvance();
-		advancing = setTimeout(() => {
+		advancing = whenQuiet(() => {
 			advancing = null;
 			if (index < chars.length - 1) open(index + 1);
 			else goGrid();
-		}, CELEBRATE_MS);
+		}, AFTER_CHEER_MS);
 	}
 
 	function goGrid() {
