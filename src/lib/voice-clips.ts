@@ -3,4 +3,31 @@
 // The letters that have a spoken "A is for apple" clip in
 // static/sounds/voice/phrase/. A letter not listed here simply stays
 // quiet, so the set can be filled in a few at a time.
-export const PHRASES: readonly string[] = ['a', 'b', 'c'];
+export const PHRASES: readonly string[] = [
+	'a',
+	'b',
+	'c',
+	'd',
+	'e',
+	'f',
+	'g',
+	'h',
+	'i',
+	'j',
+	'k',
+	'l',
+	'm',
+	'n',
+	'o',
+	'p',
+	'q',
+	'r',
+	's',
+	't',
+	'u',
+	'v',
+	'w',
+	'x',
+	'y',
+	'z'
+];
