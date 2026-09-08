@@ -55,6 +55,24 @@ export function unlock() {
 let voice: HTMLAudioElement | null = null;
 /** The celebration currently sounding, if any. Prompts keep out of its way. */
 let cueing: HTMLAudioElement | null = null;
+/** A prompt waiting for the celebration to finish, and how to call it off. */
+let waiting: ReturnType<typeof setTimeout> | null = null;
+
+/** How often to look at whether the celebration has finished. */
+const POLL = 120;
+/** A beat of quiet after it does, before the letter is announced. */
+const GAP = 250;
+/**
+ * Give up waiting after this. A cue that stalls or errors never reaches its end,
+ * and losing the prompt for good would be worse than a late one.
+ */
+const MAX_WAIT = 6000;
+
+function stopWaiting() {
+	if (waiting === null) return;
+	clearTimeout(waiting);
+	waiting = null;
+}
 
 function voiceEl(): HTMLAudioElement | null {
 	if (!browser) return null;
@@ -84,29 +102,45 @@ function celebrating(): boolean {
 /**
  * Say "A is for apple" for a letter, if that letter has been recorded.
  *
- * Nothing is ever spoken across a celebration. Finishing a glyph opens the next
- * one while the cheer or the trombone is still going, and a voice arriving on
- * top of that -- or queued up to follow it, so the child waits five seconds
- * before they can draw -- is worse than staying quiet. The letter is announced
- * when it is opened from the grid or by tapping through, which is when a child
- * is choosing rather than being congratulated.
+ * Never across a celebration, and never instead of one. Finishing a glyph opens
+ * the next while the cheer or the trombone is still going, so the prompt waits
+ * for the noise to stop and then says its piece. Only the newest request
+ * survives: a child tapping through letters should hear the one they landed on,
+ * not a backlog.
  *
- * Asking the element rather than timing it: a duration is not known until the
- * metadata loads, and on the first celebration of a cold start it is NaN.
+ * Watching for quiet rather than timing the cue: a duration is not known until
+ * the metadata loads, and on the first celebration of a cold start it is NaN,
+ * which is how an earlier version of this talked straight over the cheer.
  */
 export function speak(char: string) {
+	stopWaiting();
 	const key = char.toLowerCase();
 	const a = voiceEl();
-	if (!a || celebrating() || !PHRASES.includes(key)) return;
+	if (!a || !PHRASES.includes(key)) return;
 	a.pause();
-	a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
-	a.currentTime = 0;
-	a.play().catch(() => {
-		// Not unlocked yet, or the file is not there. Quiet is fine.
-	});
+	const say = () => {
+		waiting = null;
+		a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
+		a.currentTime = 0;
+		a.play().catch(() => {
+			// Not unlocked yet, or the file is not there. Quiet is fine.
+		});
+	};
+	if (!celebrating()) return say();
+	let waited = 0;
+	const listen = () => {
+		if (!celebrating()) {
+			waiting = setTimeout(say, GAP);
+			return;
+		}
+		waited += POLL;
+		waiting = waited >= MAX_WAIT ? setTimeout(say, 0) : setTimeout(listen, POLL);
+	};
+	listen();
 }
 
-/** Stop a prompt part way -- on leaving the glyph. */
+/** Stop a prompt part way, and call off one that is waiting. */
 export function hush() {
+	stopWaiting();
 	voice?.pause();
 }
