@@ -32,6 +32,27 @@ const eye = (cx: number, cy: number, r = 6.5): Prim[] => [
 	{ k: 'circle', o: { cx: cx + r * 0.36, cy: cy - r * 0.36, r: r * 0.34 }, fill: P.white }
 ];
 
+// The queen is a portrait rather than a poster shape, so she keeps her own
+// colours: skin, hair and jewel tones that the semantic poster palette has no
+// names for.
+const Q = {
+	skin: '#FAD6B1',
+	shadow: '#E1C09F',
+	blush: '#F0BCA4',
+	hair: '#4A3018',
+	robe: '#694F8E',
+	iris: '#3B2F2F',
+	white: '#FFFFFF',
+	lip: '#C96464',
+	lipLine: '#A84C4C',
+	gold: '#F4D03F',
+	goldDark: '#D4AC0D',
+	ruby: '#E74C3C',
+	sapphire: '#3498DB',
+	emerald: '#2ECC71',
+	amethyst: '#9B59B6'
+} as const;
+
 export const SUBJECTS: Record<string, Subject> = {
 	apple: () => [
 		{ k: 'line', d: 'M100 80 C103 62 111 50 126 44', color: P.brown, w: 9 },
@@ -399,24 +420,45 @@ export const SUBJECTS: Record<string, Subject> = {
 		...eye(116, 66, 7)
 	],
 
+	// A portrait queen, drawn flat rather than in the poster palette: this one
+	// carries her own skin, hair and jewel colours, so she does not take part in
+	// the global shading (`shade` off throughout) -- the neck shadow and cheeks
+	// below already supply her depth, and the light discs would fight them.
+	//
+	// The shoulders end on the backdrop disc itself (centre 100,102 radius 104)
+	// rather than on a straight hem, so nothing spills past the circle.
 	queen: () => [
+		{ k: 'path', d: 'M34 182.4 A104 104 0 0 0 166 182.4 Q100 142 34 182.4 Z', fill: Q.robe },
+		{ k: 'rect', x: 88, y: 132, w: 24, h: 25, fill: Q.skin },
+		{ k: 'path', d: 'M88 152 Q100 162 112 152 Z', fill: Q.shadow },
+		{ k: 'path', d: 'M50 102 Q40 172 60 192 Q100 152 140 192 Q160 172 150 102 Z', fill: Q.hair },
 		{
 			k: 'path',
-			d: 'M50 178 C 54 128, 76 108, 100 108 C 124 108, 146 128, 150 178 Z',
-			fill: P.purple,
-			shade: true
+			d: 'M65 97 Q65 147 100 152 Q135 147 135 97 Q135 62 100 62 Q65 62 65 97 Z',
+			fill: Q.skin
 		},
-		{ k: 'circle', o: { cx: 100, cy: 88, r: 40 }, fill: P.sand, shade: true },
-		{
-			k: 'path',
-			d: 'M60 56 L60 26 L78 42 L100 18 L122 42 L140 26 L140 56 Z',
-			fill: P.yellow,
-			shade: true
-		},
-		{ k: 'circle', o: { cx: 100, cy: 30, r: 6 }, fill: P.red },
-		{ k: 'line', d: 'M92 104 q 8 8 16 0', color: P.dark, w: 3.6 },
-		...eye(86, 84, 6),
-		...eye(114, 84, 6)
+		{ k: 'circle', o: { cx: 78, cy: 122, r: 8 }, fill: Q.blush, op: 0.6 },
+		{ k: 'circle', o: { cx: 122, cy: 122, r: 8 }, fill: Q.blush, op: 0.6 },
+		{ k: 'path', d: 'M75 107 Q82 102 89 107 Q82 112 75 107 Z', fill: Q.white },
+		{ k: 'circle', o: { cx: 82, cy: 107, r: 4 }, fill: Q.iris },
+		{ k: 'circle', o: { cx: 81, cy: 106, r: 1.5 }, fill: Q.white },
+		{ k: 'path', d: 'M111 107 Q118 102 125 107 Q118 112 111 107 Z', fill: Q.white },
+		{ k: 'circle', o: { cx: 118, cy: 107, r: 4 }, fill: Q.iris },
+		{ k: 'circle', o: { cx: 117, cy: 106, r: 1.5 }, fill: Q.white },
+		{ k: 'line', d: 'M72 97 Q82 92 90 97', color: Q.hair, w: 2 },
+		{ k: 'line', d: 'M110 97 Q118 92 128 97', color: Q.hair, w: 2 },
+		{ k: 'path', d: 'M100 110 L96 120 L100 122 L104 120 Z', fill: Q.shadow },
+		{ k: 'path', d: 'M90 134 Q100 142 110 134 Q100 146 90 134 Z', fill: Q.lip },
+		{ k: 'line', d: 'M90 134 Q100 137 110 134', color: Q.lipLine, w: 1 },
+		{ k: 'path', d: 'M100 62 Q75 62 60 97 Q55 82 65 62 Q80 47 100 62 Z', fill: Q.hair },
+		{ k: 'path', d: 'M100 62 Q125 62 140 97 Q145 82 135 62 Q120 47 100 62 Z', fill: Q.hair },
+		{ k: 'path', d: 'M55 77 L70 32 L100 52 L130 32 L145 77 Z', fill: Q.gold },
+		{ k: 'path', d: 'M55 77 Q100 87 145 77 L140 87 Q100 97 60 87 Z', fill: Q.goldDark },
+		{ k: 'circle', o: { cx: 70, cy: 47, r: 4 }, fill: Q.ruby },
+		{ k: 'circle', o: { cx: 100, cy: 62, r: 5 }, fill: Q.sapphire },
+		{ k: 'circle', o: { cx: 130, cy: 47, r: 4 }, fill: Q.emerald },
+		{ k: 'circle', o: { cx: 85, cy: 74, r: 3 }, fill: Q.amethyst },
+		{ k: 'circle', o: { cx: 115, cy: 74, r: 3 }, fill: Q.amethyst }
 	],
 
 	rainbow: () => [
