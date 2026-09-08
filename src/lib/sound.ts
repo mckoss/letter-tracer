@@ -8,6 +8,7 @@
 import { browser } from '$app/environment';
 import { base } from '$app/paths';
 import { PHRASES } from './voice-clips';
+import type { WordSet } from './words';
 
 export type Cue = 'cheer' | 'sad';
 
@@ -125,7 +126,9 @@ export function whenQuiet(then: () => void, gap = GAP): () => void {
 }
 
 /**
- * Say "A is for apple" for a letter, if that letter has been recorded.
+ * Say "A is for apple" for a letter, if that letter has been recorded in the
+ * word set in play. Each set has its own recording of the same letter: the
+ * line is "A is for ambulance" under vehicles.
  *
  * Never across a celebration, and never instead of one. Finishing a glyph opens
  * the next while the cheer or the trombone is still going, so the prompt waits
@@ -137,15 +140,15 @@ export function whenQuiet(then: () => void, gap = GAP): () => void {
  * the metadata loads, and on the first celebration of a cold start it is NaN,
  * which is how an earlier version of this talked straight over the cheer.
  */
-export function speak(char: string) {
+export function speak(char: string, set: WordSet = 'general') {
 	stopWaiting();
 	const key = char.toLowerCase();
 	const a = voiceEl();
-	if (!a || !PHRASES.includes(key)) return;
+	if (!a || !PHRASES[set]?.includes(key)) return;
 	a.pause();
 	waiting = whenQuiet(() => {
 		waiting = null;
-		a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
+		a.src = `${base}/sounds/voice/phrase/${set}/${key}.mp3`;
 		a.currentTime = 0;
 		a.play().catch(() => {
 			// Not unlocked yet, or the file is not there. Quiet is fine.

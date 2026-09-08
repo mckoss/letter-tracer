@@ -4,7 +4,7 @@
 	import { art } from '$lib/art';
 	import { ORDER, SETS, SET_LABELS, type StrokeSet } from '$lib/glyphs/data';
 	import { progress } from '$lib/progress.svelte';
-	import { wordFor, wordKey } from '$lib/words';
+	import { WORD_SET_KEYS, WORD_SET_LABELS, wordFor, wordKey, type WordSet } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
 	import GlyphWord from '$lib/components/GlyphWord.svelte';
 	import Splash from '$lib/components/Splash.svelte';
@@ -28,7 +28,11 @@
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
-	const picture = $derived(art(wordKey(char), 96));
+	// Which words the letters stand for, and so which pictures and which spoken
+	// prompts. Read straight off the store so switching sets redraws the letter
+	// the child is already looking at.
+	const words = $derived(progress.data.words);
+	const picture = $derived(art(wordKey(char, words), 96));
 
 	/**
 	 * A beat after the cheer has finished before the next letter arrives. The
@@ -57,7 +61,7 @@
 		// Announce the letter on arrival -- but never across a celebration, which
 		// is what `speak` checks, so an auto-advanced letter stays quiet. Letters
 		// with no clip recorded yet stay quiet too, as does a muted app.
-		if (!progress.data.muted) speak(chars[i] ?? '');
+		if (!progress.data.muted) speak(chars[i] ?? '', progress.data.words);
 		if (wasGrid) history.pushState({ lt: 'trace' }, '');
 	}
 
@@ -132,6 +136,10 @@
 		index = 0;
 		progress.setPrefs({ lastSet: next });
 	}
+
+	function pickWords(next: WordSet) {
+		progress.setPrefs({ words: next });
+	}
 </script>
 
 <svelte:head><title>Letter Tracer</title></svelte:head>
@@ -188,6 +196,14 @@
 					</button>
 				{/each}
 			</div>
+
+			<div class="seg small" role="group" aria-label="Picture words">
+				{#each WORD_SET_KEYS as k (k)}
+					<button type="button" aria-pressed={words === k} onclick={() => pickWords(k)}>
+						{WORD_SET_LABELS[k]}
+					</button>
+				{/each}
+			</div>
 		</div>
 
 		<div class="grid">
@@ -221,7 +237,7 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- markup generated locally -->
 				{@html picture}
 			{/if}
-			<GlyphWord text={wordFor(char)} height={30} />
+			<GlyphWord text={wordFor(char, words)} height={30} />
 		</div>
 
 		<nav class="nav">
@@ -403,6 +419,16 @@
 	.seg button[aria-pressed='true'] {
 		background: #c34c3e;
 		color: #fff;
+	}
+	/* The words are a quieter choice than the letters: same control, less shout,
+	   so the eye still lands on capitals / lowercase / numbers first. */
+	.seg.small button {
+		padding: 6px 16px;
+		font-size: 0.86rem;
+		font-weight: 600;
+	}
+	.seg.small button[aria-pressed='true'] {
+		background: #3e7c7b;
 	}
 
 	.grid {
