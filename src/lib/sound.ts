@@ -8,7 +8,7 @@
 import { browser } from '$app/environment';
 import { base } from '$app/paths';
 import { PHRASES } from './voice-clips';
-import type { WordSet } from './words';
+import { phraseStem, type WordSet } from './words';
 
 export type Cue = 'cheer' | 'sad';
 
@@ -126,9 +126,10 @@ export function whenQuiet(then: () => void, gap = GAP): () => void {
 }
 
 /**
- * Say "A is for apple" for a letter, if that letter has been recorded in the
- * word set in play. Each set has its own recording of the same letter: the
- * line is "A is for ambulance" under vehicles.
+ * Say "A is for apple" for a letter, if that line has been recorded. The line
+ * follows the word set in play -- it is "A is for ambulance" under vehicles --
+ * and the clip is named after the letter and the word together, so two sets
+ * that share a word share its recording.
  *
  * Never across a celebration, and never instead of one. Finishing a glyph opens
  * the next while the cheer or the trombone is still going, so the prompt waits
@@ -142,13 +143,13 @@ export function whenQuiet(then: () => void, gap = GAP): () => void {
  */
 export function speak(char: string, set: WordSet = 'general') {
 	stopWaiting();
-	const key = char.toLowerCase();
+	const stem = phraseStem(char, set);
 	const a = voiceEl();
-	if (!a || !PHRASES[set]?.includes(key)) return;
+	if (!a || !PHRASES.includes(stem)) return;
 	a.pause();
 	waiting = whenQuiet(() => {
 		waiting = null;
-		a.src = `${base}/sounds/voice/phrase/${set}/${key}.mp3`;
+		a.src = `${base}/sounds/voice/phrase/${stem}.mp3`;
 		a.currentTime = 0;
 		a.play().catch(() => {
 			// Not unlocked yet, or the file is not there. Quiet is fine.
