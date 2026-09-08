@@ -36,14 +36,18 @@ with no network at all.
 - **One to three stars** per letter, best kept per glyph, on how well the strokes
   were ordered and how closely they followed the guide.
 - **A spoken prompt** for each letter, in a child's voice.
+- **Two sets of words**, switched from the home screen: the general set (A is
+  for apple) or vehicles (A is for ambulance). Each set brings its own pictures
+  and its own recordings. N, O and X keep their general word in the vehicles
+  set -- there is no vehicle for them worth the confusion.
 - **Progress by day** in a four-week calendar, kept in `localStorage` only.
   Nothing is uploaded, and there are no accounts.
 - **Installable and offline.** Everything — letterforms, pictures, sounds — is
   precached on first load.
 
 The word pictures and the letterforms are hand-authored SVG, drawn in a
-posterised style with one shared light source. See
-[`CREDITS.md`](CREDITS.md) for the sounds.
+posterised style with one shared light source -- 49 pictures across the two word
+sets. See [`CREDITS.md`](CREDITS.md) for the sounds.
 
 ## Running it
 

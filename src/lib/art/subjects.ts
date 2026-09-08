@@ -27,6 +27,36 @@ const weave = (cx: number, cy: number, rx: number, ry: number, n: number, arc = 
 	return parts.join(' ');
 };
 
+/**
+ * A road wheel: dark tyre, pale hub. Every wheeled subject stands on these, so
+ * they are one shape rather than twenty-odd slightly different ones -- a set of
+ * vehicles read as a set largely because the wheels match.
+ */
+const wheel = (cx: number, cy: number, r: number): Prim[] => [
+	{ k: 'circle', o: { cx, cy, r }, fill: P.dark, shade: true },
+	{ k: 'circle', o: { cx, cy, r: r * 0.42 }, fill: P.grey, shade: true, soft: true }
+];
+
+/** The usual pair, on one axle line. */
+const axle = (x1: number, x2: number, cy: number, r: number): Prim[] => [
+	...wheel(x1, cy, r),
+	...wheel(x2, cy, r)
+];
+
+/** A row of `n` evenly spaced windows: a bus, a van, a bridge deck. */
+const glazing = (x: number, y: number, w: number, h: number, n: number, gap: number): Prim[] =>
+	Array.from({ length: n }, (_, i) => ({
+		k: 'rect',
+		x: x + i * (w + gap),
+		y,
+		w,
+		h,
+		rx: 4,
+		fill: P.sky,
+		shade: true,
+		soft: true
+	}));
+
 const eye = (cx: number, cy: number, r = 6.5): Prim[] => [
 	{ k: 'circle', o: { cx, cy, r }, fill: P.dark },
 	{ k: 'circle', o: { cx: cx + r * 0.36, cy: cy - r * 0.36, r: r * 0.34 }, fill: P.white }
@@ -787,6 +817,330 @@ function countScene(n: number): Prim[] {
 		shade: true
 	}));
 }
+
+/**
+ * The vehicles set: anything with wheels, wings or a hull.
+ *
+ * Kept apart from the general subjects above only for reading -- `SUBJECTS` is
+ * one flat map keyed by word, and nest, orange and xylophone are in both sets
+ * with one drawing between them.
+ *
+ * Everything on wheels shares a ground line around y=150 and the same `wheel`,
+ * so a bus parked next to a van looks like it is on the same road.
+ */
+const VEHICLE_SUBJECTS: Record<string, Subject> = {
+	ambulance: () => [
+		{
+			k: 'path',
+			d: 'M24 150 L24 118 L44 118 L56 98 L174 98 L174 150 Z',
+			fill: P.white,
+			shade: true
+		},
+		{ k: 'path', d: 'M46 120 L58 102 L82 102 L82 120 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 88, y: 128, w: 86, h: 12, fill: P.red, shade: true, soft: true },
+		// The cross reads as an ambulance faster than any amount of bodywork does.
+		{ k: 'rect', x: 128, y: 104, w: 13, h: 24, fill: P.red },
+		{ k: 'rect', x: 122, y: 110, w: 25, h: 12, fill: P.red },
+		{ k: 'rect', x: 92, y: 88, w: 32, h: 11, rx: 5, fill: P.blue, shade: true },
+		...axle(62, 148, 150, 20)
+	],
+
+	bus: () => [
+		{ k: 'rect', x: 24, y: 82, w: 152, h: 70, rx: 14, fill: P.yellow, shade: true },
+		...glazing(38, 94, 26, 26, 4, 8),
+		{ k: 'line', d: 'M30 134 H170', color: P.slate, w: 8 },
+		{ k: 'circle', o: { cx: 166, cy: 144, r: 6 }, fill: P.cream },
+		...axle(58, 142, 152, 20)
+	],
+
+	car: () => [
+		{ k: 'rect', x: 22, y: 110, w: 156, h: 38, rx: 16, fill: P.red, shade: true },
+		{ k: 'path', d: 'M58 110 L74 80 L128 80 L150 110 Z', fill: P.red, shade: true },
+		{ k: 'path', d: 'M68 106 L80 86 L96 86 L96 106 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'path', d: 'M104 86 L122 86 L136 106 L104 106 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 170, cy: 124, r: 7 }, fill: P.cream },
+		...axle(60, 140, 148, 19)
+	],
+
+	digger: () => [
+		{ k: 'rect', x: 26, y: 134, w: 112, h: 32, rx: 16, fill: P.dark, shade: true },
+		{ k: 'circle', o: { cx: 46, cy: 150, r: 10 }, fill: P.grey, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 118, cy: 150, r: 10 }, fill: P.grey, shade: true, soft: true },
+		{ k: 'rect', x: 42, y: 100, w: 84, h: 36, rx: 8, fill: P.yellow, shade: true },
+		{ k: 'rect', x: 48, y: 68, w: 46, h: 36, rx: 7, fill: P.yellow, shade: true },
+		{ k: 'rect', x: 56, y: 76, w: 30, h: 20, rx: 4, fill: P.sky, shade: true, soft: true },
+		// Boom, arm, bucket -- the three-jointed reach is the whole silhouette.
+		{ k: 'line', d: 'M116 108 L152 74', color: P.gold, w: 14 },
+		{ k: 'line', d: 'M152 74 L164 112', color: P.gold, w: 12 },
+		{ k: 'path', d: 'M154 110 L176 104 L174 132 L152 128 Z', fill: P.slate, shade: true }
+	],
+
+	engine: () => [
+		{ k: 'circle', o: { cx: 60, cy: 48, r: 13 }, fill: P.white, shade: true },
+		{ k: 'circle', o: { cx: 80, cy: 34, r: 10 }, fill: P.white, shade: true },
+		{ k: 'circle', o: { cx: 98, cy: 26, r: 7 }, fill: P.white, shade: true },
+		{ k: 'rect', x: 32, y: 136, w: 144, h: 14, rx: 4, fill: P.slate, shade: true },
+		{ k: 'rect', x: 36, y: 96, w: 96, h: 44, rx: 20, fill: P.green, shade: true },
+		{ k: 'rect', x: 126, y: 72, w: 48, h: 68, rx: 6, fill: P.rust, shade: true },
+		{ k: 'rect', x: 136, y: 82, w: 28, h: 24, rx: 4, fill: P.sky, shade: true, soft: true },
+		{ k: 'path', d: 'M50 96 L50 74 L42 66 L76 66 L68 74 L68 96 Z', fill: P.dark, shade: true },
+		{ k: 'line', d: 'M40 118 H126', color: P.gold, w: 5 },
+		...wheel(66, 152, 22),
+		...wheel(120, 152, 15),
+		...wheel(152, 152, 15)
+	],
+
+	firetruck: () => [
+		{ k: 'rect', x: 22, y: 100, w: 154, h: 50, rx: 8, fill: P.red, shade: true },
+		{ k: 'rect', x: 32, y: 108, w: 34, h: 22, rx: 4, fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 96, y: 116, w: 74, h: 24, rx: 4, fill: P.cream, shade: true, soft: true },
+		{ k: 'rect', x: 56, y: 80, w: 112, h: 16, rx: 3, fill: P.tan, shade: true },
+		{
+			k: 'line',
+			d: 'M74 80 V96 M92 80 V96 M110 80 V96 M128 80 V96 M146 80 V96',
+			color: P.sand,
+			w: 4
+		},
+		{ k: 'circle', o: { cx: 42, cy: 90, r: 8 }, fill: P.blue, shade: true },
+		...axle(56, 142, 152, 20)
+	],
+
+	'garbage truck': () => [
+		{ k: 'path', d: 'M70 150 L70 84 L154 84 L176 116 L176 150 Z', fill: P.moss, shade: true },
+		{ k: 'rect', x: 22, y: 104, w: 50, h: 46, rx: 6, fill: P.green, shade: true },
+		{ k: 'rect', x: 30, y: 112, w: 32, h: 20, rx: 4, fill: P.sky, shade: true, soft: true },
+		{ k: 'line', d: 'M78 124 H168', color: P.cream, w: 6 },
+		...axle(58, 144, 152, 19)
+	],
+
+	helicopter: () => [
+		{ k: 'rect', x: 94, y: 62, w: 11, h: 22, fill: P.slate, shade: true },
+		{ k: 'line', d: 'M24 62 H176', color: P.dark, w: 7 },
+		{ k: 'path', d: 'M124 104 L172 108 L172 122 L126 128 Z', fill: P.blue, shade: true },
+		{ k: 'path', d: 'M158 106 L172 82 L178 110 Z', fill: P.navy, shade: true },
+		{ k: 'ellipse', o: { cx: 84, cy: 116, rx: 54, ry: 36 }, fill: P.blue, shade: true },
+		{ k: 'circle', o: { cx: 66, cy: 110, r: 22 }, fill: P.sky, shade: true, soft: true },
+		{ k: 'line', d: 'M48 160 H128 M70 148 L74 160 M110 148 L114 160', color: P.slate, w: 6 }
+	],
+
+	'ice cream truck': () => [
+		{ k: 'circle', o: { cx: 102, cy: 64, r: 15 }, fill: P.pink, shade: true },
+		{ k: 'path', d: 'M90 72 L114 72 L102 98 Z', fill: P.tan, shade: true },
+		// Cream rather than white: a white van on the pale disc all but vanishes,
+		// which is the ambulance's problem too -- that one is rescued by its cross.
+		{
+			k: 'path',
+			d: 'M24 150 L24 118 L44 118 L56 98 L172 98 L172 150 Z',
+			fill: P.cream,
+			shade: true
+		},
+		{ k: 'path', d: 'M46 120 L57 102 L80 102 L80 120 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 96, y: 106, w: 62, h: 26, rx: 3, fill: P.sky, shade: true, soft: true },
+		...[0, 1, 2, 3, 4].map((i): Prim => ({
+			k: 'rect',
+			x: 96 + i * 13,
+			y: 136,
+			w: 13,
+			h: 12,
+			fill: i % 2 ? P.teal : P.pink,
+			shade: true,
+			soft: true
+		})),
+		...axle(60, 146, 150, 20)
+	],
+
+	jet: () => [
+		{ k: 'path', d: 'M96 106 L64 66 L88 66 L124 102 Z', fill: P.navy, shade: true },
+		{ k: 'path', d: 'M36 108 L20 76 L36 78 L54 104 Z', fill: P.navy, shade: true },
+		{ k: 'ellipse', o: { cx: 100, cy: 110, rx: 76, ry: 17, rot: -7 }, fill: P.white, shade: true },
+		{ k: 'path', d: 'M92 114 L54 152 L84 152 L118 118 Z', fill: P.blue, shade: true },
+		{ k: 'line', d: 'M54 112 H140', color: P.sky, w: 7 },
+		{
+			k: 'ellipse',
+			o: { cx: 156, cy: 100, rx: 13, ry: 7, rot: -7 },
+			fill: P.sky,
+			shade: true,
+			soft: true
+		}
+	],
+
+	kayak: () => [
+		{ k: 'line', d: 'M38 86 L162 62', color: P.tan, w: 7 },
+		{ k: 'ellipse', o: { cx: 34, cy: 87, rx: 20, ry: 12, rot: -11 }, fill: P.red, shade: true },
+		{ k: 'ellipse', o: { cx: 166, cy: 62, rx: 20, ry: 12, rot: -11 }, fill: P.red, shade: true },
+		{
+			k: 'path',
+			d: 'M24 118 C 64 98, 136 98, 176 118 C 136 142, 64 142, 24 118 Z',
+			fill: P.orange,
+			shade: true
+		},
+		{
+			k: 'ellipse',
+			o: { cx: 100, cy: 118, rx: 26, ry: 12 },
+			fill: P.dark,
+			shade: true,
+			soft: true
+		},
+		{ k: 'line', d: 'M26 150 Q 56 142 86 150 T 146 150', color: P.sky, w: 7 },
+		{ k: 'line', d: 'M44 168 Q 72 160 100 168 T 156 168', color: P.sky, w: 7 }
+	],
+
+	limo: () => [
+		{ k: 'rect', x: 22, y: 112, w: 156, h: 34, rx: 14, fill: P.white, shade: true },
+		{ k: 'path', d: 'M52 112 L64 92 L146 92 L162 112 Z', fill: P.white, shade: true },
+		...glazing(72, 96, 17, 12, 4, 6),
+		{ k: 'line', d: 'M30 128 H170', color: P.slate, w: 5 },
+		...axle(52, 150, 146, 17)
+	],
+
+	motorcycle: () => [
+		...axle(54, 146, 136, 32),
+		{ k: 'line', d: 'M70 132 L96 100 L128 108 L138 134', color: P.red, w: 11 },
+		{ k: 'line', d: 'M88 98 L74 68', color: P.slate, w: 8 },
+		{ k: 'line', d: 'M58 60 L92 70', color: P.dark, w: 7 },
+		{ k: 'path', d: 'M92 100 L124 104 L120 118 L94 114 Z', fill: P.red, shade: true },
+		{ k: 'path', d: 'M116 98 L146 94 L148 104 L118 110 Z', fill: P.dark, shade: true },
+		{ k: 'line', d: 'M118 128 L154 132', color: P.grey, w: 7 },
+		{ k: 'circle', o: { cx: 68, cy: 74, r: 10 }, fill: P.cream, shade: true }
+	],
+
+	plane: () => [
+		{ k: 'path', d: 'M32 106 L20 70 L42 76 L54 102 Z', fill: P.rust, shade: true },
+		{ k: 'ellipse', o: { cx: 40, cy: 112, rx: 24, ry: 8 }, fill: P.rust, shade: true },
+		{ k: 'ellipse', o: { cx: 96, cy: 108, rx: 70, ry: 22, rot: -4 }, fill: P.red, shade: true },
+		{ k: 'path', d: 'M84 114 L46 150 L86 150 L120 116 Z', fill: P.rust, shade: true },
+		{ k: 'circle', o: { cx: 86, cy: 103, r: 7 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 104, cy: 102, r: 7 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 122, cy: 101, r: 7 }, fill: P.sky },
+		{ k: 'ellipse', o: { cx: 170, cy: 104, rx: 6, ry: 40 }, fill: P.grey, shade: true, op: 0.85 },
+		{ k: 'ellipse', o: { cx: 164, cy: 104, rx: 9, ry: 13 }, fill: P.slate, shade: true }
+	],
+
+	quad: () => [
+		{ k: 'circle', o: { cx: 44, cy: 140, r: 22 }, fill: P.slate, shade: true },
+		{ k: 'circle', o: { cx: 158, cy: 140, r: 22 }, fill: P.slate, shade: true },
+		{
+			k: 'path',
+			d: 'M46 128 L70 104 L134 104 L156 128 L150 144 L52 144 Z',
+			fill: P.red,
+			shade: true
+		},
+		{ k: 'path', d: 'M82 104 L118 100 L120 114 L84 116 Z', fill: P.dark, shade: true },
+		{ k: 'line', d: 'M124 100 L134 80', color: P.slate, w: 7 },
+		{ k: 'line', d: 'M118 74 L152 82', color: P.dark, w: 6 },
+		{ k: 'circle', o: { cx: 148, cy: 112, r: 8 }, fill: P.cream },
+		...axle(56, 146, 146, 26)
+	],
+
+	rocket: () => [
+		{ k: 'path', d: 'M84 154 Q 100 190 116 154 Z', fill: P.orange, shade: true },
+		{ k: 'path', d: 'M91 154 Q 100 176 109 154 Z', fill: P.yellow, shade: true, soft: true },
+		{ k: 'path', d: 'M70 106 L46 152 L70 146 Z', fill: P.red, shade: true },
+		{ k: 'path', d: 'M130 106 L154 152 L130 146 Z', fill: P.red, shade: true },
+		{
+			k: 'path',
+			d: 'M100 24 C 124 52, 132 96, 130 140 L70 140 C 68 96, 76 52, 100 24 Z',
+			fill: P.white,
+			shade: true
+		},
+		{
+			k: 'path',
+			d: 'M100 24 C 112 40, 118 56, 120 68 L80 68 C 82 56, 88 40, 100 24 Z',
+			fill: P.red,
+			shade: true
+		},
+		{ k: 'circle', o: { cx: 100, cy: 96, r: 21 }, fill: P.slate, shade: true },
+		{ k: 'circle', o: { cx: 100, cy: 96, r: 15 }, fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 68, y: 136, w: 64, h: 12, rx: 4, fill: P.slate, shade: true }
+	],
+
+	ship: () => [
+		{ k: 'line', d: 'M58 92 L58 54', color: P.tan, w: 5 },
+		{ k: 'rect', x: 78, y: 68, w: 46, h: 26, rx: 4, fill: P.white, shade: true },
+		{ k: 'rect', x: 128, y: 62, w: 22, h: 34, rx: 4, fill: P.rust, shade: true },
+		{ k: 'line', d: 'M130 72 H148', color: P.cream, w: 6 },
+		{ k: 'rect', x: 62, y: 92, w: 76, h: 36, rx: 5, fill: P.white, shade: true },
+		...glazing(86, 74, 9, 12, 3, 6),
+		...glazing(70, 102, 12, 14, 4, 7),
+		{ k: 'path', d: 'M22 128 L178 128 L158 166 L42 166 Z', fill: P.red, shade: true },
+		{ k: 'line', d: 'M32 140 H168', color: P.cream, w: 6 },
+		{ k: 'line', d: 'M36 176 Q 64 168 92 176 T 150 176', color: P.sky, w: 7 }
+	],
+
+	truck: () => [
+		{ k: 'rect', x: 86, y: 110, w: 90, h: 36, rx: 5, fill: P.blue, shade: true },
+		{ k: 'path', d: 'M28 146 L28 116 L44 116 L58 92 L96 92 L96 146 Z', fill: P.blue, shade: true },
+		{ k: 'path', d: 'M50 114 L60 98 L88 98 L88 114 Z', fill: P.sky, shade: true, soft: true },
+		{ k: 'line', d: 'M88 110 H174', color: P.navy, w: 7 },
+		{ k: 'circle', o: { cx: 34, cy: 128, r: 7 }, fill: P.cream },
+		...axle(60, 146, 146, 20)
+	],
+
+	// The one wheel is most of the picture, so it is a rim and spokes rather
+	// than the solid tyre the cars use -- filled at this size it is a black hole
+	// with a saddle on top.
+	unicycle: () => [
+		{ k: 'line', d: 'M100 96 L100 70', color: P.red, w: 10 },
+		{ k: 'line', d: 'M86 138 L88 104 M114 138 L112 104', color: P.red, w: 8 },
+		{ k: 'rect', x: 84, y: 94, w: 32, h: 11, rx: 5, fill: P.red, shade: true },
+		{ k: 'path', d: 'M74 70 Q 100 54 126 70 Q 100 80 74 70 Z', fill: P.dark, shade: true },
+		{
+			k: 'line',
+			d: 'M60 138 A 40 40 0 1 0 140 138 A 40 40 0 1 0 60 138',
+			color: P.dark,
+			w: 11,
+			cap: 'butt'
+		},
+		{ k: 'line', d: 'M100 138 L100 102 M100 138 L131 158 M100 138 L69 158', color: P.grey, w: 4 },
+		{ k: 'line', d: 'M100 138 L74 130 M100 138 L126 146', color: P.slate, w: 8 },
+		{ k: 'circle', o: { cx: 100, cy: 138, r: 8 }, fill: P.slate, shade: true },
+		{ k: 'rect', x: 58, y: 124, w: 18, h: 9, rx: 3, fill: P.dark },
+		{ k: 'rect', x: 122, y: 142, w: 18, h: 9, rx: 3, fill: P.dark }
+	],
+
+	van: () => [
+		{ k: 'rect', x: 24, y: 76, w: 152, h: 44, rx: 16, fill: P.teal, shade: true },
+		{ k: 'rect', x: 24, y: 110, w: 152, h: 38, rx: 14, fill: P.cream, shade: true },
+		{ k: 'rect', x: 34, y: 86, w: 44, h: 26, rx: 6, fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 90, y: 86, w: 34, h: 26, rx: 5, fill: P.sky, shade: true, soft: true },
+		{ k: 'rect', x: 132, y: 86, w: 34, h: 26, rx: 5, fill: P.sky, shade: true, soft: true },
+		{ k: 'circle', o: { cx: 32, cy: 126, r: 7 }, fill: P.cream },
+		...axle(58, 142, 148, 20)
+	],
+
+	wagon: () => [
+		{ k: 'line', d: 'M42 108 L22 68', color: P.slate, w: 8 },
+		{ k: 'line', d: 'M12 62 Q 24 52 38 60', color: P.slate, w: 8 },
+		{ k: 'path', d: 'M34 108 L166 108 L152 152 L48 152 Z', fill: P.red, shade: true },
+		{ k: 'line', d: 'M62 118 V146 M100 118 V148 M138 118 V146', color: P.rust, w: 4 },
+		{ k: 'line', d: 'M32 110 H168', color: P.rust, w: 9 },
+		...axle(62, 140, 156, 20)
+	],
+
+	yacht: () => [
+		{ k: 'line', d: 'M96 132 L96 40', color: P.tan, w: 6 },
+		{ k: 'path', d: 'M96 40 L120 47 L96 54 Z', fill: P.red },
+		{ k: 'path', d: 'M102 46 C 134 76, 146 106, 148 130 L102 130 Z', fill: P.white, shade: true },
+		{ k: 'path', d: 'M90 50 C 70 78, 58 106, 52 130 L90 130 Z', fill: P.cream, shade: true },
+		{ k: 'path', d: 'M24 134 L176 134 L154 164 L46 164 Z', fill: P.navy, shade: true },
+		{ k: 'line', d: 'M32 144 H168', color: P.cream, w: 6 },
+		{ k: 'line', d: 'M34 174 Q 62 166 90 174 T 146 174', color: P.sky, w: 7 }
+	],
+
+	zeppelin: () => [
+		{ k: 'path', d: 'M36 78 L16 62 L30 92 Z', fill: P.rust, shade: true },
+		{ k: 'path', d: 'M36 114 L16 130 L30 100 Z', fill: P.rust, shade: true },
+		{ k: 'ellipse', o: { cx: 100, cy: 96, rx: 76, ry: 44 }, fill: P.cream, shade: true },
+		{ k: 'line', d: 'M146 62 Q 156 96 146 130', color: P.tan, w: 5 },
+		{ k: 'line', d: 'M84 134 V140 M116 134 V140', color: P.slate, w: 4 },
+		{ k: 'rect', x: 76, y: 136, w: 48, h: 21, rx: 9, fill: P.brown, shade: true },
+		{ k: 'circle', o: { cx: 88, cy: 146, r: 4 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 100, cy: 146, r: 4 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 112, cy: 146, r: 4 }, fill: P.sky }
+	]
+};
+
+Object.assign(SUBJECTS, VEHICLE_SUBJECTS);
 
 const NUMBER_NAMES = [
 	'zero',

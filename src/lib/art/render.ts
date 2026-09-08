@@ -109,7 +109,11 @@ let seq = 0;
 
 /** Self-contained SVG markup for one subject, `size` px wide. */
 export function draw(name: string, prims: Prim[], backdrop: string, size: number): string {
-	const uid = `${name}-${seq++}`;
+	// The name goes into clip-path ids, so anything that is not id-safe has to
+	// go. A word with a space in it -- "garbage truck" -- produced
+	// `url(#c-garbage truck-0-3)`, which matches nothing: every clip silently
+	// resolved to none and the picture came out as a flat dark rectangle.
+	const uid = `${name.replace(/[^a-zA-Z0-9]+/g, '-')}-${seq++}`;
 	const body = prims.map((prim, i) => renderPrim(prim, uid, i)).join('');
 	return (
 		`<svg viewBox="0 0 200 210" width="${size}" height="${Math.round(size * 1.05)}" role="img" aria-label="${name}">` +

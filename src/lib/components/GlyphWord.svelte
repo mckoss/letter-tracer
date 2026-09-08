@@ -69,8 +69,20 @@
 </svg>
 
 <style>
+	/*
+	 * Shrink to fit rather than overflow. The word is as wide as it is long, and
+	 * the longest are half as wide again as the box they sit in on a narrow
+	 * phone -- "ICE CREAM TRUCK" against "XYLOPHONE". Width comes from the
+	 * attribute above and is the flex base size, so flex-shrink can take it
+	 * down; `height: auto` then follows the viewBox rather than the attribute,
+	 * and the word simply gets smaller instead of running off the screen.
+	 */
 	svg {
 		display: block;
 		overflow: visible;
+		max-width: 100%;
+		min-width: 0;
+		flex-shrink: 1;
+		height: auto;
 	}
 </style>

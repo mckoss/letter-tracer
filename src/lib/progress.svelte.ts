@@ -6,6 +6,7 @@
 
 import { browser } from '$app/environment';
 import type { StrokeSet } from './glyphs/data';
+import type { WordSet } from './words';
 import type { Best, Stars } from './trace/engine';
 
 const KEY = 'letter-tracer:v1';
@@ -18,6 +19,8 @@ export type Store = {
 	/** char -> best stars ever earned on it. Absent means never completed. */
 	best: Record<string, Best>;
 	lastSet: StrokeSet;
+	/** Which set of word pictures the letters get. */
+	words: WordSet;
 	muted: boolean;
 };
 
@@ -26,6 +29,7 @@ const empty = (): Store => ({
 	days: {},
 	best: {},
 	lastSet: 'upper',
+	words: 'general',
 	muted: false
 });
 
@@ -72,7 +76,7 @@ class Progress {
 		this.#save();
 	}
 
-	setPrefs(patch: Partial<Pick<Store, 'lastSet' | 'muted'>>) {
+	setPrefs(patch: Partial<Pick<Store, 'lastSet' | 'words' | 'muted'>>) {
 		Object.assign(this.data, patch);
 		this.#save();
 	}
