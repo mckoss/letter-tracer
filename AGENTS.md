@@ -49,11 +49,12 @@ the version badge rather than assuming.
 ## Bump the version with the change
 
 **Bump `version` in `package.json` in the same commit as any user-visible
-change** — a fix, a new letter, a redrawn picture. Minor for a feature or new
-artwork, patch for a fix. The badge is the only way to tell which build is in
-front of you, and a change that ships without a bump makes it lie: the badge
-shows the version you already had, so a correct fix looks like it never
-deployed.
+change** — a fix, a new letter, a redrawn picture. Patch for a fix or a
+content change; minor only when the app gains something it could not do
+before. Redrawing a picture is a patch, however different it looks. The badge
+is the only way to tell which build is in front of you, and a change that
+ships without a bump makes it lie: the badge shows the version you already
+had, so a correct fix looks like it never deployed.
 
 ## Verify, don't assume
 
