@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+	COVERED_AT,
 	advance,
 	chainStarts,
 	findStart,
+	coverDirection,
+	coveredRun,
+	markCovered,
 	findStarts,
 	liftIndex,
 	completeIndex,
@@ -152,6 +156,76 @@ describe('advance', () => {
 	it('follows a reversed stroke from the far end', () => {
 		const s = line();
 		expect(advance(s, { index: 0, dir: -1, progress: 0 }, { x: 92, y: 0 })).toBe(8);
+	});
+});
+
+describe('markCovered', () => {
+	it('marks every sample the finger passed over, and reports the nearest', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		const sweep = markCovered(s, covered, { x: 50, y: 0 });
+		// TOLERANCE is 11, so samples 39..61 inclusive.
+		expect(sweep.added).toBe(23);
+		expect(sweep.index).toBe(50);
+		expect(covered[39]).toBe(true);
+		expect(covered[38]).toBe(false);
+	});
+
+	it('does not count a sample twice', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		markCovered(s, covered, { x: 50, y: 0 });
+		expect(markCovered(s, covered, { x: 50, y: 0 }).added).toBe(0);
+	});
+
+	it('ignores a finger nowhere near the stroke', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		expect(markCovered(s, covered, { x: 50, y: 40 })).toEqual({ added: 0, index: -1 });
+	});
+
+	it('covers a whole stroke drawn backwards, which advance would refuse', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		let last = -1;
+		for (let x = 100; x >= 0; x--) last = markCovered(s, covered, { x, y: 0 }).index;
+		expect(covered.filter(Boolean).length / covered.length).toBeGreaterThanOrEqual(COVERED_AT);
+		// Nearest sample ran from high to low: the finger went backwards.
+		expect(last).toBe(0);
+	});
+});
+
+describe('coveredRun', () => {
+	it('measures the longest unbroken run, not the total', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		// Both ends touched, middle untouched: 88% of the samples, in two pieces.
+		markCovered(s, covered, { x: 12, y: 0 });
+		markCovered(s, covered, { x: 88, y: 0 });
+		expect(covered.filter(Boolean).length / covered.length).toBeCloseTo(0.46, 1);
+		expect(coveredRun(covered)).toBeCloseTo(0.23, 1);
+	});
+
+	it('reaches the threshold once the run joins up', () => {
+		const s = line();
+		const covered = s.pts.map(() => false);
+		for (let x = 0; x <= 100; x += 5) markCovered(s, covered, { x, y: 0 });
+		expect(coveredRun(covered)).toBe(1);
+	});
+});
+
+describe('coverDirection', () => {
+	it('calls a stroke run the whole way backwards a reversal', () => {
+		expect(coverDirection(-34, 34)).toBe(-1);
+	});
+
+	it('does not call a tail brushing along part of it a reversal', () => {
+		// u's bowl runs back up a fifth of u's stem on its way to the top.
+		expect(coverDirection(-7, 34)).toBe(1);
+	});
+
+	it('is forward when the finger went forward', () => {
+		expect(coverDirection(30, 34)).toBe(1);
 	});
 });
 

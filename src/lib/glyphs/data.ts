@@ -33,7 +33,10 @@ export const UPPER: Record<string, string[]> = {
 	D: ['M26 10 L26 110', 'M26 10 L48 10 C82 10 82 110 48 110 L26 110'],
 	E: ['M26 10 L26 110', 'M26 10 L72 10', 'M26 60 L64 60', 'M26 110 L72 110'],
 	F: ['M26 10 L26 110', 'M26 10 L72 10', 'M26 60 L64 60'],
-	G: ['M71 22 A 32 50 0 1 0 71 98 L71 66', 'M71 66 L49 66'],
+	// The arc carries on curling up to the middle line, then the bar slides left.
+	// A straight vertical tick spliced onto the arc read as a third piece of the
+	// letter that nobody is taught to draw.
+	G: ['M71 22 A 32 50 0 1 0 71 98 C 77 91 76 78 76 66', 'M76 66 L46 66'],
 	H: ['M24 10 L24 110', 'M76 10 L76 110', 'M24 60 L76 60'],
 	I: ['M50 10 L50 110', 'M30 10 L70 10', 'M30 110 L70 110'],
 	J: ['M62 10 L62 84 A 19 26 0 0 1 24 84'],

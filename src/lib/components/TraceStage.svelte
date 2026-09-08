@@ -23,14 +23,19 @@
 	import { samplePoints, strokeInfo } from '$lib/glyphs/measure';
 	import {
 		COLD,
+		COVERED_AT,
 		DEVIATION_CLAMP,
 		RESOLVE_DISTANCE,
 		TOLERANCE,
 		advance,
 		chainStarts,
 		completeIndex,
+		coverDirection,
+		coveredRun,
+		extraIndex,
 		findStarts,
 		liftIndex,
+		markCovered,
 		nearest,
 		ptAt,
 		resolveStart,
@@ -49,8 +54,32 @@
 	}: { strokes: string[]; char: string; onDone: (stars: Stars) => void } = $props();
 
 	let svgEl: SVGSVGElement | undefined = $state();
-	let samples = $state<StrokeSample[]>([]);
+	/**
+	 * Plain, not $state: nothing in the markup reads it, and the effect below both
+	 * writes it and (through reset) reads it, which as reactive state is a loop
+	 * that trips effect_update_depth_exceeded and takes the whole component's
+	 * reactivity down with it. Being plain also keeps the proxy out of `sweep`,
+	 * which walks every sample point of every stroke on every finger position.
+	 */
+	let samples: StrokeSample[] = [];
 	let done = $state<boolean[]>([]);
+
+	/**
+	 * Which sample points of each stroke the finger has passed over. A stroke that
+	 * ends up substantially covered counts as drawn, whatever route the finger
+	 * took to cover it -- see COVERED_AT.
+	 */
+	let covered: boolean[][] = [];
+	let coveredCount: number[] = [];
+	/**
+	 * Which way the finger has been travelling along each stroke, as a running sum
+	 * of steps forward minus steps back. Counted only while that stroke is the one
+	 * under the finger: strokes overlap -- u's bowl runs back up the same line its
+	 * stem comes down -- so coverage left by drawing a *different* stroke says
+	 * nothing about which way this one was drawn.
+	 */
+	let coverLast: number[] = [];
+	let coverDrift: number[] = [];
 
 	/**
 	 * Every line the child has drawn on this letter, oldest first, one per touch.
@@ -85,6 +114,10 @@
 	/** Wipe the letter -- ink and all -- and start over. */
 	export function reset() {
 		done = strokes.map(() => false);
+		covered = samples.map((s) => s.pts.map(() => false));
+		coveredCount = samples.map(() => 0);
+		coverLast = samples.map(() => -1);
+		coverDrift = samples.map(() => 0);
 		gestures = [];
 		live = null;
 		completed = [];
@@ -172,11 +205,15 @@
 		done[i] = true;
 		completed.push(i);
 		if (dir === -1) reversals++;
-		attempt = null;
-		pending = null;
-		origin = null;
-		linkFrom = chainAt ?? null;
-		forgetJunction();
+		// Only the stroke under the finger lets it go. A stroke that filled in by
+		// coverage somewhere else must not cancel what the finger is doing.
+		if (attempt === null || attempt.index === i) {
+			attempt = null;
+			pending = null;
+			origin = null;
+			linkFrom = chainAt ?? null;
+			forgetJunction();
+		}
 		if (!done.every(Boolean)) return;
 		const stars = scoreLetter(completed, reversals, extras, devCount ? devSum / devCount : 0);
 		result = stars;
@@ -193,6 +230,7 @@
 		startLine(p);
 		// The letter is finished and celebrating, but the finger is still a finger.
 		if (result !== null) return;
+		sweep(p);
 		linkFrom = null;
 		forgetJunction();
 		const hits = findStarts(samples, done, p);
@@ -232,6 +270,43 @@
 		arm([chosen], from);
 	}
 
+	/**
+	 * Record where the line has been, and finish any stroke it has now covered.
+	 * Runs for every finger position, whether or not a stroke is armed -- this is
+	 * what lets a child draw a letter in any direction, from any starting point,
+	 * in any number of passes, and still have it count.
+	 *
+	 * Returns how far the finger is from the nearest unfinished stroke.
+	 */
+	function sweep(p: Pt): number {
+		let near = Infinity;
+		for (let i = 0; i < samples.length; i++) {
+			// The tittle on i and j is completed by a tap, not by being drawn over.
+			if (done[i] || samples[i].isDot) continue;
+			const hit = markCovered(samples[i], covered[i], p);
+			if (hit.index < 0) continue;
+			near = Math.min(
+				near,
+				Math.hypot(p.x - samples[i].pts[hit.index].x, p.y - samples[i].pts[hit.index].y)
+			);
+			if (attempt === null || attempt.index === i) {
+				if (coverLast[i] >= 0) coverDrift[i] += Math.sign(hit.index - coverLast[i]);
+				coverLast[i] = hit.index;
+			}
+			coveredCount[i] += hit.added;
+			// The cheap test first: the expensive one only runs once enough of the
+			// stroke has been touched for an unbroken run to be possible at all.
+			if (coveredCount[i] / samples[i].pts.length < COVERED_AT) continue;
+			if (coveredRun(covered[i]) < COVERED_AT) continue;
+			// Which way round it was drawn. The armed stroke already knows; anything
+			// else is read from the direction the finger travelled along it.
+			const dir =
+				attempt?.index === i ? attempt.dir : coverDirection(coverDrift[i], samples[i].pts.length);
+			finish(i, dir, p);
+		}
+		return near;
+	}
+
 	function onMove(e: PointerEvent) {
 		const p = local(e);
 		// The line first, unconditionally, before a single word about strokes. The
@@ -241,7 +316,11 @@
 		extendLine(p);
 		if (!live || result !== null) return;
 
-		if (!attempt) return linkFrom ? link(p) : undefined;
+		if (!attempt) {
+			judge(p, sweep(p));
+			if (linkFrom) link(p);
+			return;
+		}
 
 		if (pending && origin) {
 			// Too early to tell which stroke is meant: do not score or advance
@@ -272,13 +351,30 @@
 		// the tolerance and so did not move the child forward. One wild excursion
 		// costs a star; it does not wreck the average outright. Reaching for a
 		// stroke not yet begun is travel, not bad drawing, so it is not judged.
-		if (attempt.progress >= COLD || m.dist <= TOLERANCE) {
+		const judged = attempt.progress >= COLD || m.dist <= TOLERANCE;
+		if (judged) {
 			devSum += Math.min(m.dist, DEVIATION_CLAMP);
 			devCount++;
 		}
 
 		attempt.progress = advance(s, attempt, p);
 		if (attempt.progress >= completeIndex(s)) finish(attempt.index, attempt.dir, p);
+		const near = sweep(p);
+		if (!judged) judge(p, near);
+	}
+
+	/**
+	 * Score how close to a guide this finger position was, when the armed stroke
+	 * did not already account for it.
+	 *
+	 * Only marks made at the letter count. Past DEVIATION_CLAMP the child is not
+	 * tracing badly, they are drawing something else on the same screen, and a
+	 * doodle beside a neat letter should not cost a star.
+	 */
+	function judge(p: Pt, near: number) {
+		if (near > DEVIATION_CLAMP) return;
+		devSum += near;
+		devCount++;
 	}
 
 	function onUp(e: PointerEvent) {
@@ -296,8 +392,12 @@
 			return finish(attempt.index, attempt.dir);
 		}
 		// A stroke genuinely begun and then let go of is the "extra stroke" that
-		// costs a star. A stray tap that never moved is forgiven.
-		if (attempt.progress > 2) extras++;
+		// costs a star. Barely touching one is forgiven: running out the foot of
+		// k's stem picks up the start of its lower leg and creeps a few samples
+		// along it, which is not a child giving up on a stroke.
+		if (attempt.progress >= extraIndex(s)) {
+			extras++;
+		}
 		attempt = null;
 		pending = null;
 		origin = null;

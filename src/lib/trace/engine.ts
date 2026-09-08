@@ -54,6 +54,34 @@ export const COMPLETE_AT = 0.88;
 export const FINISH_ON_LIFT = 0.75;
 
 /**
+ * Fraction of a stroke's sample points the finger must have passed over for the
+ * stroke to count as traced, however it got there.
+ *
+ * This is the forgiving path, and it is the one most drawings actually take. The
+ * arm-and-advance machinery below needs the finger to start near one end of a
+ * stroke and work along it; a child who starts in the middle of G's arc, or
+ * doubles back, or goes round the wrong way, can cover every dash on the screen
+ * and register nothing. If the line is there, the stroke is drawn.
+ *
+ * It has to be one unbroken run of the stroke, not that fraction of it totted up
+ * from anywhere. Strokes lie along one another all over the alphabet: both ends
+ * of a's bowl sit on a's stem, so drawing the bowl alone puts a band of coverage
+ * around each end and adds up to most of a stem nobody has drawn.
+ */
+export const COVERED_AT = 0.85;
+
+/**
+ * How far into a stroke the finger must have got before letting go of it counts
+ * as an abandoned attempt, as a fraction.
+ *
+ * Two samples used to be enough, which caught strokes nobody had begun: running
+ * out the foot of k's stem passes the start of its lower leg, picks it up, and
+ * creeps three samples along it before the finger lifts. That is not a child
+ * giving up on a stroke, and it should not cost a star.
+ */
+export const EXTRA_AT = 0.15;
+
+/**
  * How far a still-down finger must travel from where a stroke ended before it is
  * read as reaching for the next one. Without it the tremor of a finger resting
  * on a junction picks up a stroke nobody meant to begin.
@@ -198,6 +226,74 @@ export function resolveStart(
 	return best;
 }
 
+/** What one finger position did to a stroke's coverage. */
+export type Sweep = {
+	/** Sample points newly passed over. */
+	added: number;
+	/** Nearest sample within tolerance, or -1. Tracks which way the finger went. */
+	index: number;
+};
+
+/**
+ * Mark every sample point within `tolerance` of the finger. Unlike `advance`
+ * this has no notion of progress or direction: it only records where the line
+ * has been, which is the whole point of it.
+ */
+export function markCovered(
+	s: StrokeSample,
+	covered: boolean[],
+	p: Pt,
+	tolerance = TOLERANCE
+): Sweep {
+	const max = tolerance ** 2;
+	let added = 0;
+	let index = -1;
+	let best = max;
+	for (let i = 0; i < s.pts.length; i++) {
+		const d = d2(s.pts[i], p);
+		if (d > max) continue;
+		if (!covered[i]) {
+			covered[i] = true;
+			added++;
+		}
+		if (d <= best) {
+			best = d;
+			index = i;
+		}
+	}
+	return { added, index };
+}
+
+/**
+ * How much of a stroke the finger must have travelled backwards along before a
+ * stroke completed by coverage is called a reversal.
+ *
+ * Half its length, because brushing along part of a stroke is not drawing it
+ * backwards. u is written by coming up the right side and then going back down
+ * it, so the tail of its bowl runs the wrong way along a fifth of its stem;
+ * charging a star for that would penalise the taught letterform.
+ */
+export const REVERSE_AT = 0.5;
+
+/**
+ * Which way a stroke completed by coverage was drawn, from the net direction the
+ * finger travelled along it. Forward unless it clearly went the other way.
+ */
+export function coverDirection(drift: number, samples: number): 1 | -1 {
+	return drift <= -REVERSE_AT * samples ? -1 : 1;
+}
+
+/** Longest unbroken run of covered samples, as a fraction of the stroke. */
+export function coveredRun(covered: boolean[]): number {
+	let best = 0;
+	let run = 0;
+	for (const c of covered) {
+		run = c ? run + 1 : 0;
+		if (run > best) best = run;
+	}
+	return covered.length ? best / covered.length : 0;
+}
+
 /**
  * The point on the stroke nearest the finger, searching only forward from where
  * the child has already got to. `dist` is how far off the guide they are, which
@@ -236,6 +332,11 @@ export function completeIndex(s: StrokeSample): number {
 /** Progress at which lifting the finger still finishes the stroke. */
 export function liftIndex(s: StrokeSample): number {
 	return (s.pts.length - 1) * FINISH_ON_LIFT;
+}
+
+/** Progress beyond which letting go counts as an attempt that was abandoned. */
+export function extraIndex(s: StrokeSample): number {
+	return (s.pts.length - 1) * EXTRA_AT;
 }
 
 /** How closely the finger followed the guide, averaged over the whole letter. */

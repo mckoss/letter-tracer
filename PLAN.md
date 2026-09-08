@@ -143,20 +143,35 @@ Per armed stroke:
 2. `pointerdown` must land within `startRadius` of some incomplete stroke's
    start (or end) point to arm it. Otherwise: bounce the arrow, but draw the
    line anyway — an ignored finger reads as a broken app.
-3. `pointermove` searches a forward window `[progress, progress + lookahead]`
+3. **Coverage finishes a stroke however it was drawn.** Every finger position
+   marks the sample points within `tolerance` of it, and a stroke whose covered
+   samples form an unbroken run of `COVERED_AT` (85%) counts as traced — no
+   matter where the finger started, which way it went, or how many passes it
+   took. This is the path most real drawings take; the arm-and-advance machinery
+   below is the tidy case, not the only one.
+
+   It has to be one unbroken run rather than that fraction totted up from
+   anywhere: strokes lie along one another all over the alphabet (both ends of
+   `a`'s bowl sit on `a`'s stem), so a band of coverage around each end would
+   otherwise add up to most of a stem nobody drew.
+
+4. `pointermove` searches a forward window `[progress, progress + lookahead]`
    for the sample nearest the finger. Within `tolerance` → advance `progress`.
    Finger strays wide → **hold** progress rather than failing. Toddler-forgiving:
    you can wander off and come back.
-4. The ink is the child's **raw finger trail**, not the guide path revealed.
+5. The ink is the child's **raw finger trail**, not the guide path revealed.
    Snapping the ink to the guide makes the letter draw itself perfectly however
    sloppy the finger was, which teaches nothing; drawing the real trail shows
    the child their own line and lets the score measure how close it ran.
-5. Stroke completes at ≥88% progress under the finger, or ≥75% if the finger
-   lifts there.
-6. A still-down finger then enters the linking state, and may pick up any other
+6. Or, on the tidy path, a stroke completes at ≥88% progress under the finger,
+   or ≥75% if the finger lifts there.
+7. A still-down finger then enters the linking state, and may pick up any other
    incomplete stroke it sets off from.
-7. `pointerup` early → nothing happens to the line; the stroke is simply still
-   incomplete, and free to retry.
+8. `pointerup` early → nothing happens to the line; the stroke is simply still
+   incomplete, and free to retry. Letting go past `EXTRA_AT` (15%) of a stroke
+   counts as an abandoned attempt and costs a star; below that it is forgiven,
+   since running out the foot of `k`'s stem picks up the start of its lower leg
+   and creeps a few samples along it.
 
 Tolerances scale with rendered glyph height `H`: `tolerance ≈ 0.14H`,
 `startRadius ≈ 0.16H`. These become a difficulty setting later.
