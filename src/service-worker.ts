@@ -25,13 +25,22 @@ const NAV_TIMEOUT = 2500;
  */
 const ASSETS = [...build, ...files, ...prerendered];
 
+/**
+ * Take the assets one at a time rather than with `cache.addAll`, which is
+ * all-or-nothing: a single asset that cannot be fetched -- one 404, one dropped
+ * connection on a phone with two bars -- rejects the whole call, the install
+ * fails, and the app is left with NO offline cache at all. For something whose
+ * whole point is working on a plane that is the wrong way round. Anything that
+ * does not make it is simply not cached, and the fetch handler below falls back
+ * to the network for it.
+ */
+async function precache(): Promise<void> {
+	const cache = await caches.open(CACHE);
+	await Promise.allSettled(ASSETS.map((asset) => cache.add(asset)));
+}
+
 self.addEventListener('install', (event) => {
-	event.waitUntil(
-		caches
-			.open(CACHE)
-			.then((cache) => cache.addAll(ASSETS))
-			.then(() => self.skipWaiting())
-	);
+	event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
