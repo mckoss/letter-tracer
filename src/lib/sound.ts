@@ -56,11 +56,11 @@ let voice: HTMLAudioElement | null = null;
 /** The celebration currently sounding, if any. Prompts keep out of its way. */
 let cueing: HTMLAudioElement | null = null;
 /** A prompt waiting for the celebration to finish, and how to call it off. */
-let waiting: ReturnType<typeof setTimeout> | null = null;
+let waiting: (() => void) | null = null;
 
 /** How often to look at whether the celebration has finished. */
 const POLL = 120;
-/** A beat of quiet after it does, before the letter is announced. */
+/** A beat of quiet after it does, before the next thing happens. */
 const GAP = 250;
 /**
  * Give up waiting after this. A cue that stalls or errors never reaches its end,
@@ -69,8 +69,7 @@ const GAP = 250;
 const MAX_WAIT = 6000;
 
 function stopWaiting() {
-	if (waiting === null) return;
-	clearTimeout(waiting);
+	waiting?.();
 	waiting = null;
 }
 
@@ -100,6 +99,32 @@ function celebrating(): boolean {
 }
 
 /**
+ * Run `then` once nothing is sounding, and give it back a way to call that off.
+ *
+ * Watching for quiet rather than timing the cue: a duration is not known until
+ * the metadata loads, and on the first celebration of a cold start it is NaN,
+ * which is how an earlier version of this talked straight over the cheer. A cue
+ * that stalls or errors never reaches its end either, so the wait is capped.
+ */
+export function whenQuiet(then: () => void, gap = GAP): () => void {
+	let timer: ReturnType<typeof setTimeout> | null = null;
+	let waited = 0;
+	const tick = () => {
+		if (!celebrating()) {
+			timer = setTimeout(then, gap);
+			return;
+		}
+		waited += POLL;
+		timer = waited >= MAX_WAIT ? setTimeout(then, 0) : setTimeout(tick, POLL);
+	};
+	tick();
+	return () => {
+		if (timer !== null) clearTimeout(timer);
+		timer = null;
+	};
+}
+
+/**
  * Say "A is for apple" for a letter, if that letter has been recorded.
  *
  * Never across a celebration, and never instead of one. Finishing a glyph opens
@@ -118,25 +143,14 @@ export function speak(char: string) {
 	const a = voiceEl();
 	if (!a || !PHRASES.includes(key)) return;
 	a.pause();
-	const say = () => {
+	waiting = whenQuiet(() => {
 		waiting = null;
 		a.src = `${base}/sounds/voice/phrase/${key}.mp3`;
 		a.currentTime = 0;
 		a.play().catch(() => {
 			// Not unlocked yet, or the file is not there. Quiet is fine.
 		});
-	};
-	if (!celebrating()) return say();
-	let waited = 0;
-	const listen = () => {
-		if (!celebrating()) {
-			waiting = setTimeout(say, GAP);
-			return;
-		}
-		waited += POLL;
-		waiting = waited >= MAX_WAIT ? setTimeout(say, 0) : setTimeout(listen, POLL);
-	};
-	listen();
+	});
 }
 
 /** Stop a prompt part way, and call off one that is waiting. */

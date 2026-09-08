@@ -325,8 +325,9 @@ the arrow, confetti and splash.
     because the PWA has to carry them to work offline. `CREDITS.md` records the
     position and the ways out of it.
   - **When it speaks: on opening a glyph**, "A is for apple", upper and lower
-    case sharing one clip. It waits for the cheer to finish first -- letters
-    arrive on a celebration now that finishing one opens the next.
+    case sharing one clip. Nothing is spoken across a cue: the next letter does
+    not arrive until the cheer has run to its end, so the two never compete and
+    the letter announces itself the moment it appears.
   - The letter clips feed each letter to the engine as an isolated capital and
     trust it to read the letter's name. That is an assumption about a speech
     engine, so `LETTER_TEXT` in the script lists all 26 explicitly and any that
