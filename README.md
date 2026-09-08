@@ -1,5 +1,9 @@
 # Letter Tracer
 
+### ▶ [mckoss.com/letter-tracer](https://mckoss.com/letter-tracer/)
+
+Open it on a phone and add it to the home screen.
+
 A little web app for toddlers learning to write. Pick a letter or a number, and
 trace it with a finger: a hairline dashed guide shows the shape, a bouncing
 arrow shows where each stroke starts and which way it goes, and a voice says
@@ -8,8 +12,6 @@ cheer, and one to three stars.
 
 It is built for a phone held upright, installs to the home screen, and works
 with no network at all.
-
-**Live: [mckoss.com/letter-tracer](https://mckoss.com/letter-tracer/)**
 
 <table>
 <tr>
@@ -68,6 +70,9 @@ can be unit tested; anything needing browser geometry lives in
 `src/lib/glyphs/measure.ts` or in the component.
 
 ## Deploying
+
+The live site is **<https://mckoss.com/letter-tracer/>**, served by GitHub Pages
+from the `main` branch.
 
 Pushing to `main` builds and publishes to GitHub Pages —
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `check`,
