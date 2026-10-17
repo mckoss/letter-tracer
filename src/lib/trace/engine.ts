@@ -295,6 +295,20 @@ export function coveredRun(covered: boolean[]): number {
 }
 
 /**
+ * How much nearer a later stretch of a stroke must come to the finger than an
+ * earlier one before the search passes the earlier one by.
+ *
+ * Cursive retraces: i goes up a line and straight back down it, and n's arches
+ * start by climbing back up the stem they came down. A finger on the climb is
+ * as close to the way back down as to the climb itself, the way down lies inside
+ * the look-ahead window, and taking it would strand the child's progress ahead
+ * of the finger -- and charge every remaining step of the climb as straying off
+ * the line. So near enough to a tie goes to the earlier stretch, which is the
+ * one the child is working along.
+ */
+export const RETRACE_SLACK = 4;
+
+/**
  * The point on the stroke nearest the finger, searching only forward from where
  * the child has already got to. `dist` is how far off the guide they are, which
  * is what the accuracy score is built from.
@@ -302,16 +316,18 @@ export function coveredRun(covered: boolean[]): number {
 export function nearest(s: StrokeSample, a: Attempt, p: Pt): { index: number; dist: number } {
 	const n = s.pts.length;
 	const end = Math.min(n - 1, a.progress + Math.max(2, Math.ceil(n * LOOKAHEAD)));
-	let index = a.progress;
+	const dist: number[] = [];
 	let best = Infinity;
 	for (let i = a.progress; i <= end; i++) {
-		const dd = d2(ptAt(s, a.dir, i), p);
-		if (dd < best) {
-			best = dd;
-			index = i;
-		}
+		const d = Math.sqrt(d2(ptAt(s, a.dir, i), p));
+		dist.push(d);
+		best = Math.min(best, d);
 	}
-	return { index, dist: Math.sqrt(best) };
+	// The first stretch that comes within the slack of the nearest, followed down
+	// to the bottom of its own dip.
+	let k = dist.findIndex((d) => d <= best + RETRACE_SLACK);
+	while (k + 1 < dist.length && dist[k + 1] < dist[k]) k++;
+	return { index: a.progress + k, dist: dist[k] };
 }
 
 /**

@@ -27,6 +27,10 @@ with no network at all.
 ## What it does
 
 - **62 glyphs** — A–Z, a–z and 0–9, in a plain manuscript hand on ruled lines.
+- **A cursive mode**, switched from the home screen: A–Z and a–z in the joined,
+  slanted hand taught in 20th-century American schools (Zaner-Bloser / Palmer),
+  lead-in and exit stroke on every lowercase letter, and the word under the
+  picture written joined up. Cursive letters keep their own stars.
 - **Correct stroke order, taught gently.** The arrow shows the next stroke in
   the order it is taught. Drawing them in any order, or backwards, still
   finishes the letter; it only costs a star.
@@ -122,6 +126,7 @@ licensing position on the voice.
 |                                        |                                                     |
 | -------------------------------------- | --------------------------------------------------- |
 | `src/lib/glyphs/data.ts`               | every letterform, as ordered SVG path strings       |
+| `src/lib/glyphs/cursive.ts`            | the cursive letterforms, drawn upright and slanted  |
 | `src/lib/trace/engine.ts`              | the tracing engine: pure geometry, unit tested      |
 | `src/lib/components/TraceStage.svelte` | the tracing screen                                  |
 | `src/lib/art/`                         | the word pictures and the posterised shading        |

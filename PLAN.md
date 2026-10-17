@@ -16,6 +16,7 @@ Vitest. Node pinned to LTS 24.20.0 (`.nvmrc`).
 | ------------ | ---------------------------------------------------------------------- |
 | Word artwork | Hand-authored SVG, **Poster** style (see below)                        |
 | Letterforms  | Simple block print (Zaner-Bloser style manuscript)                     |
+| Cursive      | Zaner-Bloser / Palmer joined hand, as a Print / Cursive switch         |
 | Letter order | Alphabetical **and** easy-first, as a toggle                           |
 | Navigation   | Grid picker of the whole set, plus a "Play all" that auto-advances     |
 | Stroke order | Taught, not enforced — see _Stroke order_ below                        |
@@ -68,6 +69,37 @@ ellipse.
 
 `src/routes/glyphs` renders the whole set for review, with numbered start dots
 and a direction arrow per stroke.
+
+### Cursive
+
+A Print / Cursive switch on the home screen swaps A–Z and a–z for the joined
+hand taught in American elementary schools through the 20th century -- the
+Zaner-Bloser / Palmer alphabet on the strip above the blackboard. Numbers are the
+same in both. The 52 cursive glyphs live in `src/lib/glyphs/cursive.ts`, under the
+same rules as the print ones: one path per stroke, in taught order and direction.
+
+- **Mostly one stroke.** Each lowercase letter runs from its lead-in on the
+  baseline to its exit, as it is taught; the only lifts are the dots on i and j,
+  the crosses on t and x, and the bars of F and T. Capitals follow the chart
+  (the Q that looks like a 2, the looped G, L and S).
+- **Drawn upright, slanted in code.** `slant` shears every point about 11° forward.
+  A shear is affine, so it maps each cubic exactly onto the cubic through its
+  sheared control points; the paths use only M, L, C and Z so that holds.
+- **Retraces.** Cursive goes up a line and straight back down it (i, t, the arches
+  of m and n). The engine's forward search would otherwise jump from the climb
+  to the matching point on the way down and strand the child's progress ahead of
+  the finger, so near-ties go to the earlier stretch (`RETRACE_SLACK`).
+- **Crossbars must outlast the stem.** A bar is finished by coverage alone if a
+  stem drawn through it covers 85% of it, which takes the star for order. t's
+  climb and descent run side by side, so its bar is long enough that they cannot.
+- **Its own stars.** A cursive G is a new thing to learn, so cursive letters are
+  kept under their own key (`cursive:G`); digits share one.
+- **The word is joined up.** `GlyphWord` picks each letter up from where its
+  lead-in reaches the height the last letter left off at -- the baseline for most,
+  the midline after the bridge of b, o, v and w -- and slides it along to meet
+  the exit. Capitals that do not join (D, O, W...) are spaced by clearance at
+  each height rather than by bounding box, since a slanted capital leans out at
+  the top. A cursive capital shows the word capitalised (Apple), not in capitals.
 
 ## Stroke order
 
@@ -332,7 +364,6 @@ the arrow, confetti and splash.
     trust it to read the letter's name. That is an assumption about a speech
     engine, so `LETTER_TEXT` in the script lists all 26 explicitly and any that
     comes out wrong can be respelled without touching the code.
-- Cursive / D'Nealian as an alternate letterform set.
 - Left-handed mode (mirror the arrow offset so the hand doesn't cover the guide).
 
 ## Open questions

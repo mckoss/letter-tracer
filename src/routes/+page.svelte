@@ -2,7 +2,17 @@
 	// The app: a grid of the active set, and the trace screen for one glyph.
 	import { onMount } from 'svelte';
 	import { art } from '$lib/art';
-	import { ORDER, SETS, SET_LABELS, type StrokeSet } from '$lib/glyphs/data';
+	import {
+		HANDS,
+		HAND_LABELS,
+		ORDER,
+		SETS,
+		SET_LABELS,
+		glyphKey,
+		glyphsFor,
+		type Hand,
+		type StrokeSet
+	} from '$lib/glyphs/data';
 	import { progress } from '$lib/progress.svelte';
 	import { WORD_SET_KEYS, WORD_SET_LABELS, wordFor, wordKey, type WordSet } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
@@ -28,11 +38,25 @@
 
 	const chars = $derived(ORDER[set]);
 	const char = $derived(chars[index] ?? chars[0]);
+	// Print or cursive. Numbers look the same in both; letters change shape and
+	// keep their own stars, since a cursive G is a new thing to learn.
+	const hand = $derived(progress.data.hand);
+	const glyphs = $derived(glyphsFor(set, hand));
 	// Which words the letters stand for, and so which pictures and which spoken
 	// prompts. Read straight off the store so switching sets redraws the letter
 	// the child is already looking at.
 	const words = $derived(progress.data.words);
 	const picture = $derived(art(wordKey(char, words), 96));
+	/**
+	 * The word under the picture. Print follows the case of the glyph -- APPLE
+	 * for capitals -- but nobody writes a word in cursive capitals, so a cursive
+	 * capital starts the word the way it would be written: Apple.
+	 */
+	const word = $derived.by(() => {
+		const w = wordFor(char, words);
+		if (hand !== 'cursive' || w !== w.toUpperCase()) return w;
+		return w.charAt(0) + w.slice(1).toLowerCase();
+	});
 
 	/**
 	 * A beat after the cheer has finished before the next letter arrives. The
@@ -71,7 +95,7 @@
 	}
 
 	function done(stars: StarCount) {
-		progress.record(char, stars);
+		progress.record(glyphKey(char, hand), stars);
 		// Everyone gets a burst; how big it is says how the letter went.
 		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
 		if (!progress.data.muted) play(stars === 1 ? 'sad' : 'cheer', stars === 3 ? 1 : 0.65);
@@ -117,9 +141,13 @@
 		return () => removeEventListener('popstate', onPop);
 	});
 
-	// Deep link for review: /?c=A opens straight onto that glyph.
+	// Deep link for review: /?c=A opens straight onto that glyph, and &h=cursive
+	// (or print) picks the hand it is written in.
 	onMount(() => {
-		const c = new URLSearchParams(location.search).get('c');
+		const q = new URLSearchParams(location.search);
+		const h = q.get('h');
+		if (h && (HANDS as string[]).includes(h)) pickHand(h as Hand);
+		const c = q.get('c');
 		if (!c) return;
 		for (const k of SET_KEYS) {
 			if (!SETS[k][c]) continue;
@@ -135,6 +163,10 @@
 		set = next;
 		index = 0;
 		progress.setPrefs({ lastSet: next });
+	}
+
+	function pickHand(next: Hand) {
+		progress.setPrefs({ hand: next });
 	}
 
 	function pickWords(next: WordSet) {
@@ -197,6 +229,14 @@
 				{/each}
 			</div>
 
+			<div class="seg small hand" role="group" aria-label="Handwriting">
+				{#each HANDS as k (k)}
+					<button type="button" aria-pressed={hand === k} onclick={() => pickHand(k)}>
+						{HAND_LABELS[k]}
+					</button>
+				{/each}
+			</div>
+
 			<div class="seg small" role="group" aria-label="Picture words">
 				{#each WORD_SET_KEYS as k (k)}
 					<button type="button" aria-pressed={words === k} onclick={() => pickWords(k)}>
@@ -210,11 +250,11 @@
 			{#each chars as c, i (c)}
 				<button class="tile" onclick={() => open(i)}>
 					<svg viewBox="-6 0 112 148" aria-hidden="true">
-						{#each SETS[set][c] as d, j (j)}
+						{#each glyphs[c] as d, j (j)}
 							<path {d} />
 						{/each}
 					</svg>
-					<Stars value={progress.bestFor(c)} />
+					<Stars value={progress.bestFor(glyphKey(c, hand))} />
 				</button>
 			{/each}
 		</div>
@@ -224,8 +264,8 @@
 		<PlayHistory />
 	{:else}
 		<div class="stage">
-			{#key char}
-				<TraceStage bind:this={stage} strokes={SETS[set][char]} {char} onDone={done} />
+			{#key `${hand}:${char}`}
+				<TraceStage bind:this={stage} strokes={glyphs[char]} {char} onDone={done} />
 			{/key}
 			{#if earned !== null}
 				<div class="earned"><Stars value={earned} size={30} /></div>
@@ -237,7 +277,7 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- markup generated locally -->
 				{@html picture}
 			{/if}
-			<GlyphWord text={wordFor(char, words)} height={30} />
+			<GlyphWord text={word} {hand} height={30} />
 		</div>
 
 		<nav class="nav">
@@ -429,6 +469,9 @@
 	}
 	.seg.small button[aria-pressed='true'] {
 		background: #3e7c7b;
+	}
+	.seg.hand button[aria-pressed='true'] {
+		background: #7c6b9e;
 	}
 
 	.grid {

@@ -235,6 +235,19 @@ describe('nearest', () => {
 		const m = nearest(s, { index: 0, dir: 1, progress: 0 }, { x: 4, y: 3 });
 		expect(m).toEqual({ index: 4, dist: 3 });
 	});
+
+	it('does not jump to the way back down a retraced line', () => {
+		// Cursive i: up 100 units, then straight back down the same line.
+		const pts = [
+			...Array.from({ length: 101 }, (_, i) => ({ x: 0, y: -i })),
+			...Array.from({ length: 100 }, (_, i) => ({ x: 0.5, y: -99 + i }))
+		];
+		const s: StrokeSample = { pts, length: 200, isDot: false };
+		// Eighty units up the climb, the way back down passes nearer the finger
+		// than the climb does, and it lies inside the look-ahead window.
+		const m = nearest(s, { index: 0, dir: 1, progress: 78 }, { x: 0.4, y: -80 });
+		expect(m.index).toBe(80);
+	});
 });
 
 describe('tidiness', () => {

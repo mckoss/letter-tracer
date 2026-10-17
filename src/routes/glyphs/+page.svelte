@@ -3,13 +3,15 @@
 	// start dots and a direction arrow per stroke, so stroke order and direction
 	// can be checked at a glance. Development aid, not part of the child's app.
 	import { browser } from '$app/environment';
-	import { ORDER, SETS, GUIDE, type StrokeSet } from '$lib/glyphs/data';
+	import { ORDER, GUIDE, glyphsFor, type Hand, type StrokeSet } from '$lib/glyphs/data';
 	import { strokeInfo } from '$lib/glyphs/measure';
 
-	const SECTIONS: { key: StrokeSet; name: string }[] = [
-		{ key: 'upper', name: 'Capitals' },
-		{ key: 'lower', name: 'Lowercase' },
-		{ key: 'digits', name: 'Numbers' }
+	const SECTIONS: { key: StrokeSet; hand: Hand; name: string }[] = [
+		{ key: 'upper', hand: 'print', name: 'Capitals' },
+		{ key: 'lower', hand: 'print', name: 'Lowercase' },
+		{ key: 'digits', hand: 'print', name: 'Numbers' },
+		{ key: 'upper', hand: 'cursive', name: 'Cursive capitals' },
+		{ key: 'lower', hand: 'cursive', name: 'Cursive lowercase' }
 	];
 	const COLORS = ['#C34C3E', '#3E7C7B', '#4C7A4A', '#D89A4A', '#7C6B9E'];
 
@@ -25,8 +27,8 @@
 	<header>
 		<h1>Glyph review</h1>
 		<p>
-			All 62 glyphs as the app stores them: one SVG path per stroke, numbered and arrowed in the
-			order and direction a child is taught to form them.
+			All 114 glyphs as the app stores them, 62 in print and 52 in cursive: one SVG path per stroke,
+			numbered and arrowed in the order and direction a child is taught to form them.
 		</p>
 		<div class="bar">
 			<label><input type="checkbox" bind:checked={showArrows} /> Arrows</label>
@@ -34,12 +36,13 @@
 		</div>
 	</header>
 
-	{#each SECTIONS as section (section.key)}
+	{#each SECTIONS as section (section.name)}
 		{@const set = section.key}
-		<h2>{section.name} &mdash; {Object.keys(SETS[set]).length} glyphs</h2>
+		{@const glyphs = glyphsFor(set, section.hand)}
+		<h2>{section.name} &mdash; {Object.keys(glyphs).length} glyphs</h2>
 		<div class="row">
 			{#each ORDER[set] as ch (ch)}
-				{@const strokes = SETS[set][ch]}
+				{@const strokes = glyphs[ch]}
 				<figure>
 					<svg viewBox="-4 0 108 148" width="92" height="126">
 						{#each [GUIDE.cap, GUIDE.mid, GUIDE.base, GUIDE.desc] as y (y)}

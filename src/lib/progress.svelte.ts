@@ -5,7 +5,7 @@
 // shows on each tile.
 
 import { browser } from '$app/environment';
-import type { StrokeSet } from './glyphs/data';
+import type { Hand, StrokeSet } from './glyphs/data';
 import type { WordSet } from './words';
 import type { Best, Stars } from './trace/engine';
 
@@ -16,9 +16,14 @@ export type Day = { stars: number; chars: string[] };
 export type Store = {
 	version: 1;
 	days: Record<string, Day>;
-	/** char -> best stars ever earned on it. Absent means never completed. */
+	/**
+	 * Glyph key (see `glyphKey`) -> best stars ever earned on it. Absent means
+	 * never completed.
+	 */
 	best: Record<string, Best>;
 	lastSet: StrokeSet;
+	/** Print or cursive letterforms. */
+	hand: Hand;
 	/** Which set of word pictures the letters get. */
 	words: WordSet;
 	muted: boolean;
@@ -29,6 +34,7 @@ const empty = (): Store => ({
 	days: {},
 	best: {},
 	lastSet: 'upper',
+	hand: 'print',
 	words: 'general',
 	muted: false
 });
@@ -65,25 +71,28 @@ class Progress {
 		}
 	}
 
-	/** Record a finished glyph. Only ever raises a glyph's best score. */
-	record(char: string, stars: Stars) {
+	/**
+	 * Record a finished glyph, by its `glyphKey`. Only ever raises a glyph's best
+	 * score.
+	 */
+	record(glyph: string, stars: Stars) {
 		const key = today();
 		const day = this.data.days[key] ?? { stars: 0, chars: [] };
 		day.stars += stars;
-		if (!day.chars.includes(char)) day.chars.push(char);
+		if (!day.chars.includes(glyph)) day.chars.push(glyph);
 		this.data.days[key] = day;
-		this.data.best[char] = Math.max(this.data.best[char] ?? 0, stars) as Best;
+		this.data.best[glyph] = Math.max(this.data.best[glyph] ?? 0, stars) as Best;
 		this.#save();
 	}
 
-	setPrefs(patch: Partial<Pick<Store, 'lastSet' | 'words' | 'muted'>>) {
+	setPrefs(patch: Partial<Pick<Store, 'lastSet' | 'hand' | 'words' | 'muted'>>) {
 		Object.assign(this.data, patch);
 		this.#save();
 	}
 
 	/** Zero for a glyph the child has never correctly completed. */
-	bestFor(char: string): Best {
-		return this.data.best[char] ?? 0;
+	bestFor(glyph: string): Best {
+		return this.data.best[glyph] ?? 0;
 	}
 
 	get todayStars(): number {

@@ -17,6 +17,8 @@
 // A stroke shorter than DOT_LENGTH (the tittle on i and j) is a dot: it renders
 // as a round cap and completes on a tap rather than a drag.
 
+import { CURSIVE_LOWER, CURSIVE_UPPER } from './cursive';
+
 export const GUIDE = { cap: 10, mid: 60, base: 110, desc: 138 } as const;
 export const DOT_LENGTH = 6;
 
@@ -126,3 +128,36 @@ export const ORDER: Record<StrokeSet, string[]> = {
 	lower: [...'abcdefghijklmnopqrstuvwxyz'],
 	digits: [...'0123456789']
 };
+
+/**
+ * Which hand the letters are written in: the manuscript print above, or the
+ * joined cursive in `cursive.ts`. Numbers are the same in both.
+ */
+export type Hand = 'print' | 'cursive';
+
+export const HANDS: Hand[] = ['print', 'cursive'];
+
+export const HAND_LABELS: Record<Hand, string> = {
+	print: 'Print',
+	cursive: 'Cursive'
+};
+
+export const CURSIVE_SETS: Record<StrokeSet, Record<string, string[]>> = {
+	upper: CURSIVE_UPPER,
+	lower: CURSIVE_LOWER,
+	digits: DIGITS
+};
+
+/** The glyphs of a set, in the hand asked for. */
+export function glyphsFor(set: StrokeSet, hand: Hand): Record<string, string[]> {
+	return (hand === 'cursive' ? CURSIVE_SETS : SETS)[set];
+}
+
+/**
+ * The key a glyph's stars are kept under. A cursive A is a different letter to
+ * learn from a printed one and earns its own stars; a digit is the same either
+ * way, so it keeps one.
+ */
+export function glyphKey(char: string, hand: Hand): string {
+	return hand === 'cursive' && !(char >= '0' && char <= '9') ? `cursive:${char}` : char;
+}
