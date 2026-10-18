@@ -146,13 +146,18 @@ const UPPER_UPRIGHT: Record<string, string[]> = {
 	E: [
 		'M62 20 C60 10 42 6 34 18 C28 30 32 50 44 56 C50 59 46 64 40 63 C34 62 35 56 42 57 C26 60 16 82 22 98 C28 112 56 114 72 104 C80 98 86 94 90 90'
 	],
+	// F and T share a stem and a cap: the stem's tail sweeps out left along the
+	// baseline and turns back, and the bar of F crosses the stem on the midline.
 	F: [
-		'M56 14 C54 50 50 92 42 104 C36 112 24 112 20 100',
-		'M16 20 C32 6 50 22 66 12 C74 8 82 8 88 12',
-		'M36 62 L72 60'
+		'M56 12 C54 44 52 80 46 98 C42 110 30 114 18 110 C8 106 6 92 14 86 C20 82 30 84 38 86',
+		'M16 22 C24 12 36 10 50 11 C64 12 74 12 84 8',
+		'M30 60 L76 60'
 	],
 	G: [
-		'M20 104 C30 70 50 14 62 12 C70 10 70 22 60 30 C52 38 42 52 38 60 C50 52 70 52 70 74 C70 100 52 112 40 110 C28 108 24 100 26 94 C30 88 40 96 46 100'
+		// The lead-in runs almost flat through what will be the bowl, climbs into a
+		// tall narrow loop, comes back down across itself into a wide bowl, and
+		// ends rising on the right three quarters of the way up.
+		'M21 110 C26 100 30 90 38 86 C50 82 62 84 67 76 C70 64 68 50 66 40 C64 26 60 12 56 11 C50 10 47 18 46 26 C45 46 40 72 32 88 C28 98 34 110 52 110 C70 110 84 104 87 86 C89 72 88 50 86 36'
 	],
 	H: [
 		'M14 24 C16 12 32 6 34 18 L32 110',
@@ -191,8 +196,8 @@ const UPPER_UPRIGHT: Record<string, string[]> = {
 		'M22 100 C36 92 52 60 56 10 C46 28 42 44 54 56 C76 72 90 100 62 109 C48 115 28 111 26 102 C24 94 36 94 42 102'
 	],
 	T: [
-		'M56 14 C54 50 50 92 42 104 C36 112 24 112 20 100',
-		'M16 20 C32 6 50 22 66 12 C74 8 82 8 88 12'
+		'M56 12 C54 44 52 80 46 98 C42 110 30 114 18 110 C8 106 6 92 14 86 C20 82 30 84 38 86',
+		'M16 22 C24 12 36 10 50 11 C64 12 74 12 84 8'
 	],
 	U: ['M14 24 C16 12 32 6 34 18 L32 88 C30 112 60 114 64 80 L66 12 L62 100 C60 112 74 114 88 96'],
 	V: ['M14 24 C16 12 32 6 34 18 C36 50 38 84 44 108 C50 80 60 30 72 12 C76 8 82 8 86 12'],
