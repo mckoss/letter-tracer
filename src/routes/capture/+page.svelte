@@ -7,9 +7,16 @@
 	//
 	// Nothing leaves the phone until it is exported. Samples are kept in
 	// localStorage as they are saved, so a reload or a closed tab loses nothing.
+	//
+	// The model letter behind the lines is Playwrite US Trad, an open-source font
+	// of the traditional US school cursive (see CREDITS.md). Its capitals are
+	// exactly as tall as the app's, base to top line, and its x-height lands on
+	// the midline, so it sits on the ruling at 100 units with no adjustment.
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import { GUIDE } from '$lib/glyphs/data';
-	import { CURSIVE_LOWER, CURSIVE_UPPER } from '$lib/glyphs/cursive';
+
+	const MODEL_FONT = 'Playwrite US Trad';
 
 	const KEY = 'letter-tracer:capture:v1';
 	const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'];
@@ -25,7 +32,8 @@
 	/** The attempt in progress: one array of points per finger-down. */
 	let strokes = $state<Point[][]>([]);
 	let drawing = $state(false);
-	let showGuide = $state(false);
+	let showModel = $state(true);
+	let fontReady = $state(false);
 	let showGrid = $state(false);
 	let flash = $state('');
 
@@ -34,7 +42,19 @@
 	let pointer: number | null = null;
 
 	const letter = $derived(LETTERS[index]);
-	const guide = $derived(CURSIVE_UPPER[letter] ?? CURSIVE_LOWER[letter] ?? []);
+	/**
+	 * Where to set the model letter so its ink is centred in the box. A font's
+	 * advance includes its side bearings and, in a joining script, the lead-in,
+	 * so the ink has to be measured rather than the box.
+	 */
+	const modelX = $derived.by(() => {
+		if (!fontReady) return 50;
+		const ctx = document.createElement('canvas').getContext('2d');
+		if (!ctx) return 50;
+		ctx.font = `100px "${MODEL_FONT}"`;
+		const m = ctx.measureText(letter);
+		return 50 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
+	});
 	const savedHere = $derived(samples[letter]?.length ?? 0);
 	const total = $derived(Object.values(samples).reduce((n, s) => n + s.length, 0));
 	const lettersDone = $derived(LETTERS.filter((c) => samples[c]?.length).length);
@@ -46,6 +66,10 @@
 		} catch {
 			// Corrupt or blocked storage: start empty rather than fail.
 		}
+		document.fonts
+			.load(`100px "${MODEL_FONT}"`)
+			.then(() => (fontReady = true))
+			.catch(() => {});
 		// Pick up at the first letter with nothing saved yet.
 		const next = LETTERS.findIndex((c) => !samples[c]?.length);
 		if (next >= 0) index = next;
@@ -178,7 +202,10 @@
 	const points = (line: Point[]) => line.map((p) => `${p[0]},${p[1]}`).join(' ');
 </script>
 
-<svelte:head><title>Handwriting capture &middot; Letter Tracer</title></svelte:head>
+<svelte:head>
+	<title>Handwriting capture &middot; Letter Tracer</title>
+	<link rel="stylesheet" href="{base}/fonts/playwrite.css" />
+</svelte:head>
 
 <main>
 	<header>
@@ -191,7 +218,7 @@
 			&larr;
 		</button>
 		<button class="which" onclick={() => (showGrid = !showGrid)}>
-			<span class="big">{letter}</span>
+			<span class="big">{letter} <span class="cursive">{letter}</span></span>
 			<span class="meta">{index + 1} / {LETTERS.length} &middot; {savedHere} saved</span>
 		</button>
 		<button
@@ -217,7 +244,7 @@
 	<div class="stage">
 		<svg
 			bind:this={svgEl}
-			viewBox="-10 -8 120 158"
+			viewBox="-10 -8 120 178"
 			role="application"
 			aria-label="Write the letter {letter}"
 			onpointerdown={onDown}
@@ -229,10 +256,8 @@
 			<line class="rule mid" x1="-10" x2="110" y1={GUIDE.mid} y2={GUIDE.mid} />
 			<line class="rule base" x1="-10" x2="110" y1={GUIDE.base} y2={GUIDE.base} />
 			<line class="rule" x1="-10" x2="110" y1={GUIDE.desc} y2={GUIDE.desc} />
-			{#if showGuide}
-				{#each guide as d, i (i)}
-					<path {d} class="guide" />
-				{/each}
+			{#if showModel && fontReady}
+				<text class="model" x={modelX} y={GUIDE.base}>{letter}</text>
 			{/if}
 			{#each strokes as line, i (i)}
 				{#if line.length === 1}
@@ -251,9 +276,7 @@
 	</div>
 
 	<footer>
-		<label
-			><input type="checkbox" bind:checked={showGuide} /> Show the app's current letter faintly</label
-		>
+		<label><input type="checkbox" bind:checked={showModel} /> Show the model letter</label>
 		<p>
 			{total} samples saved across {lettersDone} of {LETTERS.length} letters. Stored on this phone until
 			you export.
@@ -310,6 +333,8 @@
 		line-height: 1;
 	}
 	.meta {
+		/* Room for the descenders of the cursive f, g, j, p, q, y and z above. */
+		margin-top: 10px;
 		font-size: 13px;
 		color: #6b6072;
 	}
@@ -387,12 +412,17 @@
 	.rule.base {
 		stroke: #d98a9a;
 	}
-	.guide {
-		fill: none;
-		stroke: #d6d0dc;
-		stroke-width: 1.4;
-		stroke-dasharray: 4 4;
-		vector-effect: non-scaling-stroke;
+	.model {
+		font-family: 'Playwrite US Trad', cursive;
+		font-size: 100px;
+		fill: #e4dde9;
+		pointer-events: none;
+	}
+	.cursive {
+		font-family: 'Playwrite US Trad', cursive;
+		font-weight: 400;
+		font-size: 30px;
+		margin-left: 6px;
 	}
 	.ink {
 		fill: none;

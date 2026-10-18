@@ -1,0 +1,7 @@
+/* Playwrite US Trad, by TypeTogether: the traditional US school cursive.
+   SIL Open Font License 1.1 -- see OFL-playwrite.txt beside this file. */
+@font-face {
+	font-family: 'Playwrite US Trad';
+	src: url('playwrite-us-trad-400.woff2') format('woff2');
+	font-display: block;
+}

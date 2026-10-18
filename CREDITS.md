@@ -36,3 +36,13 @@ project. See `src/lib/art/` and `src/lib/glyphs/`.
 
 `blaze` is a generic monster truck, not a likeness of any particular television
 character.
+
+## Fonts
+
+`static/fonts/playwrite-us-trad-400.woff2` is **Playwrite US Trad** by
+TypeTogether, from Google Fonts (taken from the `@fontsource/playwrite-us-trad`
+5.3.0 package), under the
+[SIL Open Font License 1.1](https://openfontlicense.org/). The licence text is
+in `static/fonts/OFL-playwrite.txt` and has to travel with the font. It is the
+traditional US school cursive, and the handwriting capture page shows it as the
+model letter on the ruled lines.
