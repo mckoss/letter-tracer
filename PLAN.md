@@ -80,8 +80,15 @@ same rules as the print ones: one path per stroke, in taught order and direction
 
 - **Mostly one stroke.** Each lowercase letter runs from its lead-in on the
   baseline to its exit, as it is taught; the only lifts are the dots on i and j,
-  the crosses on t and x, and the bars of F and T. Capitals follow the chart
-  (the Q that looks like a 2, the looped G, L and S).
+  the crosses on t and x, and the bars of F and T.
+- **Checked against a real classroom chart.** The reference is a Teacher Created
+  Resources cursive wall chart in the Zaner-Bloser hand, supplied by the owner.
+  Every letter was compared side by side with it: shape, where it starts, which
+  way the loops go, and roughly how wide it is (the chart's ovals and arches are
+  rounder and wider than a first guess makes them). Its I starts with a short
+  stroke leftwards and climbs a tall narrow arch; G runs its lead-in flat through
+  the bowl; F and T sweep the stem's tail out left along the baseline; V, W and
+  U have round bottoms, not points.
 - **Drawn upright, slanted in code.** `slant` shears every point about 11° forward.
   A shear is affine, so it maps each cubic exactly onto the cubic through its
   sheared control points; the paths use only M, L, C and Z so that holds.
