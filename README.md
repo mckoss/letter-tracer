@@ -126,7 +126,7 @@ licensing position on the voice.
 |                                        |                                                     |
 | -------------------------------------- | --------------------------------------------------- |
 | `src/lib/glyphs/data.ts`               | every letterform, as ordered SVG path strings       |
-| `src/lib/glyphs/cursive.ts`            | the cursive letterforms, drawn upright and slanted  |
+| `src/lib/glyphs/cursive-strokes.ts`    | the cursive letters, generated from handwriting     |
 | `src/routes/capture`                   | handwriting capture: write each letter, export JSON |
 | `src/lib/trace/engine.ts`              | the tracing engine: pure geometry, unit tested      |
 | `src/lib/components/TraceStage.svelte` | the tracing screen                                  |

@@ -75,38 +75,41 @@ and a direction arrow per stroke.
 A Print / Cursive switch on the home screen swaps A–Z and a–z for the joined
 hand taught in American elementary schools through the 20th century -- the
 Zaner-Bloser / Palmer alphabet on the strip above the blackboard. Numbers are the
-same in both. The 52 cursive glyphs live in `src/lib/glyphs/cursive.ts`, under the
-same rules as the print ones: one path per stroke, in taught order and direction.
+same in both. Same rules as print: one path per stroke, in the order and
+direction it is written.
 
-- **Mostly one stroke.** Each lowercase letter runs from its lead-in on the
-  baseline to its exit, as it is taught; the only lifts are the dots on i and j,
-  the crosses on t and x, and the bars of F and T.
-- **Checked against a real classroom chart.** The reference is a Teacher Created
-  Resources cursive wall chart in the Zaner-Bloser hand, supplied by the owner.
-  Every letter was compared side by side with it: shape, where it starts, which
-  way the loops go, and roughly how wide it is (the chart's ovals and arches are
-  rounder and wider than a first guess makes them). Its I starts with a short
-  stroke leftwards and climbs a tall narrow arch; G runs its lead-in flat through
-  the bowl; F and T sweep the stem's tail out left along the baseline; V, W and
-  U have round bottoms, not points.
-- **Drawn upright, slanted in code.** `slant` shears every point about 11° forward.
-  A shear is affine, so it maps each cubic exactly onto the cubic through its
-  sheared control points; the paths use only M, L, C and Z so that holds.
+- **The owner's own handwriting.** Drawing the letters by hand, even against a
+  classroom chart, kept getting them wrong: a guessed G read as a b, a guessed I
+  as a d. So the letters are captured instead. `/capture/` shows each letter on
+  the app's ruling with the **Playwrite US Trad** model behind it (an
+  open-source font of the traditional US school cursive, SIL OFL; see
+  `CREDITS.md`), the owner writes it with a finger, and the strokes export as
+  JSON in glyph units -- order, direction and timing intact.
+- **Regenerated, not edited.** `scripts/capture_to_glyphs.mjs` turns a capture
+  (kept in `scripts/handwriting/`) into `src/lib/glyphs/cursive-strokes.ts`: it
+  splits each stroke at its sharp turns so they stay sharp, smooths the finger
+  jitter, simplifies, and draws a Catmull-Rom spline back through what is left.
+  It cuts off the flick a finger makes landing and lifting, including the bounce
+  back up off the baseline at the foot of a downstroke (H and K came back 9 and
+  14 units). It centres each letter on x = 50, and works out which capitals join
+  the next letter from where their strokes end. To change a letter, write it
+  again and regenerate.
+- **A bigger frame.** Written cursive is wider than the print box and its
+  descenders go deeper, so cursive has its own frame for the tracing stage and
+  the tiles (`CURSIVE_VIEW`).
 - **Retraces.** Cursive goes up a line and straight back down it (i, t, the arches
   of m and n). The engine's forward search would otherwise jump from the climb
   to the matching point on the way down and strand the child's progress ahead of
   the finger, so near-ties go to the earlier stretch (`RETRACE_SLACK`).
-- **Crossbars must outlast the stem.** A bar is finished by coverage alone if a
-  stem drawn through it covers 85% of it, which takes the star for order. t's
-  climb and descent run side by side, so its bar is long enough that they cannot.
 - **Its own stars.** A cursive G is a new thing to learn, so cursive letters are
   kept under their own key (`cursive:G`); digits share one.
-- **The word is joined up.** `GlyphWord` picks each letter up from where its
-  lead-in reaches the height the last letter left off at -- the baseline for most,
-  the midline after the bridge of b, o, v and w -- and slides it along to meet
-  the exit. Capitals that do not join (D, O, W...) are spaced by clearance at
-  each height rather than by bounding box, since a slanted capital leans out at
-  the top. A cursive capital shows the word capitalised (Apple), not in capitals.
+- **The word is joined up.** `GlyphWord` picks each letter up from where it
+  reaches the height the last letter left off at -- the baseline for most, the
+  midline after the bridge of b, o, v and w -- and slides it along to meet the
+  exit. Letters written without a lead-in, like a and o, are joined by a short
+  connecting stroke instead. Capitals that do not join (D, O, W...) are spaced by
+  clearance at each height rather than by bounding box. A cursive capital shows
+  the word capitalised (Apple), not in capitals.
 
 ## Stroke order
 

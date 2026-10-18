@@ -50,8 +50,21 @@
 	let {
 		strokes,
 		char,
-		onDone
-	}: { strokes: string[]; char: string; onDone: (stars: Stars) => void } = $props();
+		onDone,
+		viewBox = '-10 -8 120 158'
+	}: {
+		strokes: string[];
+		char: string;
+		onDone: (stars: Stars) => void;
+		/** The glyph frame. Cursive is wider and deeper than print, so it has its own. */
+		viewBox?: string;
+	} = $props();
+
+	// The ruled lines stop short of the frame's sides, as they always have.
+	const ruleX = $derived.by(() => {
+		const [x, , w] = viewBox.split(' ').map(Number);
+		return [x + 10, x + w - 10];
+	});
 
 	let svgEl: SVGSVGElement | undefined = $state();
 	/**
@@ -411,7 +424,7 @@
 
 <svg
 	bind:this={svgEl}
-	viewBox="-10 -8 120 158"
+	{viewBox}
 	role="application"
 	aria-label="Trace the character {char}"
 	onpointerdown={onDown}
@@ -419,8 +432,8 @@
 	onpointerup={onUp}
 	onpointercancel={onUp}
 >
-	<line class="rule" x1="0" x2="100" y1={GUIDE.mid} y2={GUIDE.mid} />
-	<line class="rule base" x1="0" x2="100" y1={GUIDE.base} y2={GUIDE.base} />
+	<line class="rule" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.mid} y2={GUIDE.mid} />
+	<line class="rule base" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.base} y2={GUIDE.base} />
 
 	{#each strokes as d, i (i)}
 		<path {d} class="guide" />

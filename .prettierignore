@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Raw handwriting captures, kept exactly as exported
+/scripts/handwriting/

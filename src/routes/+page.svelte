@@ -13,6 +13,7 @@
 		type Hand,
 		type StrokeSet
 	} from '$lib/glyphs/data';
+	import { CURSIVE_VIEW } from '$lib/glyphs/cursive';
 	import { progress } from '$lib/progress.svelte';
 	import { WORD_SET_KEYS, WORD_SET_LABELS, wordFor, wordKey, type WordSet } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
@@ -249,7 +250,7 @@
 		<div class="grid">
 			{#each chars as c, i (c)}
 				<button class="tile" onclick={() => open(i)}>
-					<svg viewBox="-6 0 112 148" aria-hidden="true">
+					<svg viewBox={hand === 'cursive' ? CURSIVE_VIEW.tile : '-6 0 112 148'} aria-hidden="true">
 						{#each glyphs[c] as d, j (j)}
 							<path {d} />
 						{/each}
@@ -265,7 +266,13 @@
 	{:else}
 		<div class="stage">
 			{#key `${hand}:${char}`}
-				<TraceStage bind:this={stage} strokes={glyphs[char]} {char} onDone={done} />
+				<TraceStage
+					bind:this={stage}
+					strokes={glyphs[char]}
+					{char}
+					onDone={done}
+					viewBox={hand === 'cursive' ? CURSIVE_VIEW.stage : undefined}
+				/>
 			{/key}
 			{#if earned !== null}
 				<div class="earned"><Stars value={earned} size={30} /></div>

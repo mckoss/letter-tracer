@@ -5,6 +5,7 @@
 	import { browser } from '$app/environment';
 	import { ORDER, GUIDE, glyphsFor, type Hand, type StrokeSet } from '$lib/glyphs/data';
 	import { strokeInfo } from '$lib/glyphs/measure';
+	import { CURSIVE_VIEW } from '$lib/glyphs/cursive';
 
 	const SECTIONS: { key: StrokeSet; hand: Hand; name: string }[] = [
 		{ key: 'upper', hand: 'print', name: 'Capitals' },
@@ -44,9 +45,13 @@
 			{#each ORDER[set] as ch (ch)}
 				{@const strokes = glyphs[ch]}
 				<figure>
-					<svg viewBox="-4 0 108 148" width="92" height="126">
+					<svg
+						viewBox={section.hand === 'cursive' ? CURSIVE_VIEW.tile : '-4 0 108 148'}
+						width="92"
+						height="126"
+					>
 						{#each [GUIDE.cap, GUIDE.mid, GUIDE.base, GUIDE.desc] as y (y)}
-							<line x1="0" x2="100" y1={y} y2={y} class="rule" class:base={y === GUIDE.base} />
+							<line x1="-16" x2="116" y1={y} y2={y} class="rule" class:base={y === GUIDE.base} />
 						{/each}
 						{#if showInk}
 							{#each strokes as d (d)}
