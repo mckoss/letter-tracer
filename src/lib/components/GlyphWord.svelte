@@ -35,8 +35,14 @@
 	 * lose its loop, so the bridge dips this much below the midline to meet it.
 	 */
 	const DIP: Record<string, number> = { e: 14 };
-	/** How far a joined letter's body may tuck back under the stroke that joins it. */
-	const TUCK = 4;
+	/**
+	 * Gap kept between a joined letter and the one before it, beyond the line
+	 * weight. Tighter than between letters that stand apart: joined letters are
+	 * meant to sit close.
+	 */
+	const JOIN_GAP = 3;
+	/** How much of the end of an exit stroke is the join itself, not the letter. */
+	const EXIT_RUN = 20;
 
 	const layout = $derived.by(() => (hand === 'cursive' ? joined(text) : printed(text)));
 
@@ -76,11 +82,14 @@
 		let x = 0;
 		let exit: Pt | null = null;
 		let prev: Pt[] | null = null;
+		/** The last letter without the run of its exit, which the next letter joins. */
+		let prevBody: Pt[] | null = null;
 		for (const ch of text) {
 			if (ch === ' ') {
 				x += SPACE;
 				exit = null;
 				prev = null;
+				prevBody = null;
 				continue;
 			}
 			const lower = ch in CURSIVE_SETS.lower;
@@ -90,16 +99,13 @@
 			let dx: number;
 			if (exit && lower) {
 				const h = exit.y + 2 + (exit.y < 80 ? (DIP[ch] ?? 0) : 0);
-				const k = Math.max(
-					0,
-					pts[0].findIndex((p) => p.y <= h)
-				);
-				pts[0] = pts[0].slice(k);
+				pts[0] = pts[0].slice(leadIn(pts[0], h));
 				const from = pts[0][0];
-				const left = Math.min(...pts.flat().map((p) => p.x));
-				// Slide the letter clear if its body would sit back over the last one,
-				// and let the join stretch to meet it, as a bridge does.
-				dx = exit.x - from.x + Math.max(0, from.x - left - TUCK);
+				// As close as it will go without running into the last letter, and
+				// never back behind the exit it is joined to; the join stretches to
+				// meet it, as a bridge does.
+				const clear = prevBody ? clearOf(prevBody, pts.flat(), weight + JOIN_GAP) : null;
+				dx = Math.max(exit.x - from.x, clear ?? -Infinity);
 				pts[0].unshift({ x: exit.x - dx, y: exit.y });
 			} else {
 				const left = Math.min(...pts.flat().map((p) => p.x));
@@ -111,6 +117,7 @@
 			const tail = exitAt === undefined ? null : placed[exitAt];
 			exit = tail ? tail[tail.length - 1] : null;
 			prev = placed.flat();
+			prevBody = placed.flatMap((line, i) => (i === exitAt ? withoutRun(line) : line));
 			x = Math.max(x, ...prev.map((p) => p.x)) + weight / 2 + SIDE;
 		}
 		const all = lines.flat();
@@ -131,7 +138,31 @@
 	 * their boxes, a D or a W that does not join would leave a gap at the baseline
 	 * the width of its own lean. Null when the two share no height at all.
 	 */
-	function clearOf(prev: Pt[], next: Pt[]): number | null {
+	/**
+	 * Where a letter's own lead-in reaches height `h`: the part of it that climbs
+	 * from where it starts, which the join replaces. A letter that starts without
+	 * one -- a, c, d, g, o and q begin at the top of the oval -- is not climbing,
+	 * and has nothing cut: cutting there would take the oval away.
+	 */
+	function leadIn(line: Pt[], h: number): number {
+		for (let i = 0; i < line.length; i++) {
+			if (line[i].y <= h) return i;
+			if (i >= 3 && line[i].y > line[i - 3].y + 0.5) return 0;
+		}
+		return 0;
+	}
+
+	/** A stroke without the last EXIT_RUN units of it. */
+	function withoutRun(line: Pt[]): Pt[] {
+		let run = 0;
+		for (let i = line.length - 1; i > 0; i--) {
+			run += Math.hypot(line[i].x - line[i - 1].x, line[i].y - line[i - 1].y);
+			if (run >= EXIT_RUN) return line.slice(0, i);
+		}
+		return [];
+	}
+
+	function clearOf(prev: Pt[], next: Pt[], gap = weight + SIDE): number | null {
 		const right = new Map<number, number>();
 		for (const p of prev) {
 			const b = Math.floor(p.y / BAND);
@@ -142,7 +173,7 @@
 		for (const p of next) {
 			const r = right.get(Math.floor(p.y / BAND));
 			if (r === undefined) continue;
-			dx = Math.max(dx ?? -Infinity, r - p.x + weight + SIDE);
+			dx = Math.max(dx ?? -Infinity, r - p.x + gap);
 		}
 		return dx;
 	}
