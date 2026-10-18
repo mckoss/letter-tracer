@@ -226,6 +226,7 @@ export const JOINS: Record<string, number> = {
 	A: 0,
 	C: 0,
 	E: 0,
+	I: 0,
 	J: 0,
 	K: 1,
 	L: 0,
