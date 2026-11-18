@@ -18,6 +18,7 @@
 	// the letter; only the star rating changes. Nor does a stroke need its own
 	// touch: one unbroken drag can run through as many strokes as it reaches,
 	// which is how B, K, M and W are really written.
+	import { onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { GUIDE } from '$lib/glyphs/data';
 	import { samplePoints, strokeInfo } from '$lib/glyphs/measure';
@@ -57,7 +58,12 @@
 	}: {
 		strokes: string[];
 		char: string;
-		onDone: (stars: Stars) => void;
+		/**
+		 * Called once, a beat after the letter is finished, with the letter it was
+		 * for -- so a report that lands after the page has moved on can be told
+		 * apart from one about the letter on screen.
+		 */
+		onDone: (stars: Stars, char: string) => void;
 		/** The glyph frame. Cursive is wider and deeper than print, so it has its own. */
 		viewBox?: string;
 		/**
@@ -135,6 +141,25 @@
 	let linkPivot = $state<Pt | null>(null);
 	let linkBest = $state(Infinity);
 	let result = $state<Stars | null>(null);
+	/**
+	 * The report waiting out the beat after a letter is finished. A stage that
+	 * goes before it fires -- the child tapped on to the next letter in that beat
+	 * -- hands it in on the way out, still marked with its own letter, so the
+	 * stars are kept but the page knows not to celebrate or advance on it. Left
+	 * to fire late, it used to be taken for the new letter, which was credited
+	 * with the stars and then skipped straight past.
+	 */
+	let reportTimer: ReturnType<typeof setTimeout> | null = null;
+	let report: (() => void) | null = null;
+	onDestroy(() => {
+		if (reportTimer !== null) clearTimeout(reportTimer);
+		reportTimer = null;
+		// Not now, but just after: during teardown Svelte hands out the old values
+		// of derived state, so the page would still think this letter is on screen
+		// -- and celebrate it, and advance past the one that replaced it.
+		if (report) setTimeout(report, 0);
+		report = null;
+	});
 	let nudge = $state(false);
 
 	/** Wipe the letter -- ink and all -- and start over. */
@@ -157,6 +182,9 @@
 		linkFrom = null;
 		forgetJunction();
 		result = null;
+		if (reportTimer !== null) clearTimeout(reportTimer);
+		reportTimer = null;
+		report = null;
 	}
 
 	// Reading `strokes` here is what re-runs this when the glyph changes.
@@ -240,10 +268,20 @@
 			linkFrom = chainAt ?? null;
 			forgetJunction();
 		}
-		if (!done.every(Boolean)) return;
+		// Once only: a single finger position can close two strokes at once.
+		if (!done.every(Boolean) || result !== null) return;
 		const stars = scoreLetter(completed, reversals, extras, devCount ? devSum / devCount : 0);
 		result = stars;
-		setTimeout(() => onDone(stars), stars === 3 ? 1500 : 1100);
+		const forChar = char;
+		report = () => onDone(stars, forChar);
+		reportTimer = setTimeout(
+			() => {
+				reportTimer = null;
+				report?.();
+				report = null;
+			},
+			stars === 3 ? 1500 : 1100
+		);
 	}
 
 	function onDown(e: PointerEvent) {
@@ -454,10 +492,6 @@
 		<line class="rule base" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.base} y2={GUIDE.base} />
 	{/if}
 
-	{#each strokes as d, i (i)}
-		<path {d} class="guide" />
-	{/each}
-
 	<!-- Under the ink, so a child's line runs over a number rather than round it.
 	     A drawn stroke's number fades back: the ones still bright are what is
 	     left to do, in order. -->
@@ -476,6 +510,13 @@
 			{/if}
 		{/each}
 	</g>
+
+	<!-- The guide goes over the child's line, not under it: under a fat marker
+	     the dashes vanished exactly where a child needs to see how close they
+	     came. -->
+	{#each strokes as d, i (i)}
+		<path {d} class="guide" />
+	{/each}
 
 	{#if arrow}
 		<g class="arrow" class:nudge>
@@ -526,25 +567,27 @@
 	.num.spent {
 		opacity: 0.3;
 	}
-	/* Hairline worksheet dashes -- not a row of fat dots. Non-scaling keeps it
-	   the same fine line whatever size the glyph is drawn at. */
+	/* Worksheet dashes, drawn over the child's line -- bold enough to read through
+	   it, still dashes rather than a row of fat dots. Non-scaling keeps them the
+	   same weight whatever size the glyph is drawn at. */
 	.guide {
 		fill: none;
-		stroke: #a79fb6;
-		stroke-width: 1.6;
-		stroke-dasharray: 5 5;
+		stroke: #7d7290;
+		stroke-width: 2.4;
+		stroke-dasharray: 6 5;
+		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 	/* Translucent so the dashed guide stays readable underneath the child's own
 	   line -- they need to see how far off it they are while they draw. */
 	.ink-layer {
-		opacity: 0.65;
+		opacity: 0.5;
 	}
 	polyline.ink,
 	circle.ink {
 		fill: none;
 		stroke: #4c7a4a;
-		stroke-width: 7;
+		stroke-width: 5.5;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		transition: stroke 240ms ease;

@@ -110,7 +110,16 @@
 		if (i >= 0 && i < chars.length) open(i);
 	}
 
-	function done(stars: StarCount) {
+	function done(stars: StarCount, forChar: string) {
+		// A letter finished just before the child moved on reports on its way out:
+		// keep its stars, but celebrating or advancing now would skip the letter
+		// they moved on to.
+		if (forChar !== char) {
+			progress.record(glyphKey(forChar, hand), stars);
+			return;
+		}
+		// Once per letter.
+		if (earned !== null) return;
 		progress.record(glyphKey(char, hand), stars);
 		// Everyone gets a burst; how big it is says how the letter went.
 		confetti?.fire(stars === 3 ? 170 : stars === 2 ? 80 : 35);
