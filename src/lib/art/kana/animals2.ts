@@ -110,18 +110,18 @@ export const ANIMALS2: Record<string, Subject> = {
 	crocodile: () =>
 		nudge(0, -12, [
 			// Far legs, behind the body.
-			{ k: 'rect', x: 84, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
-			{ k: 'rect', x: 140, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
+			{ k: 'rect', x: 86, y: 130, w: 18, h: 34, rx: 9, fill: P.moss, shade: true },
+			{ k: 'rect', x: 144, y: 130, w: 18, h: 34, rx: 9, fill: P.moss, shade: true },
 			{
 				k: 'path',
 				d: tube([140, 124], [164, 126], [178, 114], [174, 88], 30, 8),
 				fill: P.green,
 				shade: true
 			},
-			{ k: 'ellipse', o: { cx: 114, cy: 120, rx: 52, ry: 26 }, fill: P.green, shade: true },
+			{ k: 'ellipse', o: { cx: 116, cy: 120, rx: 52, ry: 30 }, fill: P.green, shade: true },
 			{
 				k: 'ellipse',
-				o: { cx: 112, cy: 138, rx: 36, ry: 6 },
+				o: { cx: 116, cy: 142, rx: 36, ry: 6 },
 				fill: P.sand,
 				shade: true,
 				soft: true
@@ -129,11 +129,11 @@ export const ANIMALS2: Record<string, Subject> = {
 			// Ridges down the back.
 			{
 				k: 'path',
-				d: 'M86 102 l6 -9 l6 9 Z M104 99 l6 -9 l6 9 Z M122 99 l6 -9 l6 9 Z M140 103 l6 -9 l6 9 Z',
+				d: 'M94 96 l6 -10 l6 10 Z M112 92 l6 -10 l6 10 Z M130 92 l6 -10 l6 10 Z M148 97 l6 -10 l6 10 Z',
 				fill: P.moss
 			},
 			// Inside of the mouth, then the teeth, then the jaws over them.
-			{ k: 'path', d: 'M30 112 L100 112 L100 134 L34 132 Z', fill: P.pink },
+			{ k: 'path', d: 'M30 112 L96 112 C 104 116, 104 130, 96 134 L34 132 Z', fill: P.pink },
 			{
 				k: 'path',
 				d: 'M36 115 l5 8 l5 -8 Z M52 115 l5 8 l5 -8 Z M68 115 l5 8 l5 -8 Z M44 133 l5 -8 l5 8 Z M60 133 l5 -8 l5 8 Z M76 133 l5 -8 l5 8 Z',
@@ -152,8 +152,8 @@ export const ANIMALS2: Record<string, Subject> = {
 				shade: true
 			},
 			// Near legs.
-			{ k: 'rect', x: 72, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
-			{ k: 'rect', x: 128, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
+			{ k: 'rect', x: 74, y: 136, w: 20, h: 34, rx: 10, fill: P.green, shade: true },
+			{ k: 'rect', x: 130, y: 136, w: 20, h: 34, rx: 10, fill: P.green, shade: true },
 			// The eye sits on a bump on top of the head.
 			{ k: 'circle', o: { cx: 80, cy: 90, r: 15 }, fill: P.green, shade: true },
 			{ k: 'circle', o: { cx: 32, cy: 102, r: 3 }, fill: P.dark },
@@ -268,19 +268,19 @@ export const ANIMALS2: Record<string, Subject> = {
 		{ k: 'ellipse', o: { cx: 100, cy: 138, rx: 44, ry: 10 }, fill: P.dark },
 		{
 			k: 'path',
-			d: 'M64 140 C 60 96, 74 56, 100 56 C 126 56, 140 96, 136 140 Z',
+			d: 'M58 140 C 52 90, 70 44, 100 44 C 130 44, 148 90, 142 140 Z',
 			fill: P.slate,
 			shade: true
 		},
 		{
 			k: 'ellipse',
-			o: { cx: 100, cy: 106, rx: 20, ry: 18 },
+			o: { cx: 100, cy: 98, rx: 22, ry: 19 },
 			fill: P.tan,
 			shade: true,
 			soft: true
 		},
-		{ k: 'ellipse', o: { cx: 100, cy: 98, rx: 13, ry: 10 }, fill: P.pink, shade: true },
-		{ k: 'line', d: 'M94 114 q 6 5 12 0', color: P.dark, w: 3 },
+		{ k: 'ellipse', o: { cx: 100, cy: 89, rx: 15, ry: 11 }, fill: P.pink, shade: true },
+		{ k: 'line', d: 'M93 106 q 7 6 14 0', color: P.dark, w: 3 },
 		// Front lip of the hole, over the body.
 		{
 			k: 'path',
@@ -290,20 +290,20 @@ export const ANIMALS2: Record<string, Subject> = {
 			soft: true
 		},
 		// Big digging paws resting on the rim, claws out.
-		{ k: 'ellipse', o: { cx: 64, cy: 138, rx: 18, ry: 13, rot: -10 }, fill: P.pink, shade: true },
-		{ k: 'ellipse', o: { cx: 136, cy: 138, rx: 18, ry: 13, rot: 10 }, fill: P.pink, shade: true },
+		{ k: 'ellipse', o: { cx: 62, cy: 136, rx: 21, ry: 15, rot: -10 }, fill: P.pink, shade: true },
+		{ k: 'ellipse', o: { cx: 138, cy: 136, rx: 21, ry: 15, rot: 10 }, fill: P.pink, shade: true },
 		{
 			k: 'line',
-			d: 'M52 146 l -3 6 M60 149 l -1 6 M68 149 l 1 6 M148 146 l 3 6 M140 149 l 1 6 M132 149 l -1 6',
+			d: 'M48 145 l -3 7 M57 149 l -1 7 M66 150 l 1 7 M152 145 l 3 7 M143 149 l 1 7 M134 150 l -1 7',
 			color: P.cream,
 			w: 3
 		},
 		// Clods of earth.
-		{ k: 'circle', o: { cx: 46, cy: 112, r: 5 }, fill: P.brown },
-		{ k: 'circle', o: { cx: 154, cy: 108, r: 6 }, fill: P.brown },
-		{ k: 'circle', o: { cx: 164, cy: 126, r: 4 }, fill: P.brown },
-		...eye(84, 82, 5),
-		...eye(116, 82, 5)
+		{ k: 'circle', o: { cx: 40, cy: 104, r: 5 }, fill: P.brown },
+		{ k: 'circle', o: { cx: 160, cy: 96, r: 6 }, fill: P.brown },
+		{ k: 'circle', o: { cx: 166, cy: 116, r: 4 }, fill: P.brown },
+		...eye(84, 72, 5.5),
+		...eye(116, 72, 5.5)
 	],
 
 	// Japanese tako: round red head, a twisted headband, a pursed mouth.

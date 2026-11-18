@@ -62,7 +62,12 @@ export const NATURE: Record<string, Subject> = {
 			color: P.dark,
 			w: 7
 		},
-		{ k: 'line', d: 'M88 46 C 82 32, 74 28, 66 30 M112 46 C 118 32, 126 28, 134 30', color: P.dark, w: 5 },
+		{
+			k: 'line',
+			d: 'M88 46 C 82 32, 74 28, 66 30 M112 46 C 118 32, 126 28, 134 30',
+			color: P.dark,
+			w: 5
+		},
 		{ k: 'circle', o: { cx: 64, cy: 30, r: 6 }, fill: P.dark },
 		{ k: 'circle', o: { cx: 136, cy: 30, r: 6 }, fill: P.dark },
 		{ k: 'circle', o: { cx: 100, cy: 122, r: 60 }, fill: P.red, shade: true },
@@ -89,15 +94,20 @@ export const NATURE: Record<string, Subject> = {
 	],
 
 	butterfly: () => [
-		{ k: 'line', d: 'M96 70 C 90 50, 80 40, 70 36 M104 70 C 110 50, 120 40, 130 36', color: P.dark, w: 4 },
+		{
+			k: 'line',
+			d: 'M96 70 C 90 50, 80 40, 70 36 M104 70 C 110 50, 120 40, 130 36',
+			color: P.dark,
+			w: 4
+		},
 		{ k: 'circle', o: { cx: 68, cy: 35, r: 5.5 }, fill: P.dark },
 		{ k: 'circle', o: { cx: 132, cy: 35, r: 5.5 }, fill: P.dark },
 		...pair('M98 104 C 86 64, 56 40, 36 50 C 18 60, 26 98, 48 110 C 64 118, 84 114, 98 104 Z').map(
 			(d): Prim => ({ k: 'path', d, fill: P.orange, shade: true })
 		),
-		...pair('M98 110 C 74 112, 46 122, 46 148 C 46 172, 76 176, 90 156 C 98 144, 100 126, 98 110 Z').map(
-			(d): Prim => ({ k: 'path', d, fill: P.purple, shade: true })
-		),
+		...pair(
+			'M98 110 C 74 112, 46 122, 46 148 C 46 172, 76 176, 90 156 C 98 144, 100 126, 98 110 Z'
+		).map((d): Prim => ({ k: 'path', d, fill: P.purple, shade: true })),
 		{ k: 'circle', o: { cx: 54, cy: 76, r: 12 }, fill: P.yellow, shade: true, soft: true },
 		{ k: 'circle', o: { cx: 146, cy: 76, r: 12 }, fill: P.yellow, shade: true, soft: true },
 		{ k: 'circle', o: { cx: 68, cy: 148, r: 9 }, fill: P.pink, shade: true, soft: true },
@@ -129,13 +139,21 @@ export const NATURE: Record<string, Subject> = {
 		return [
 			{
 				k: 'line',
-				d: dots(segs.map(([x, y]) => [x - 6, y + r + 2])) + ' ' + dots(segs.map(([x, y]) => [x + 8, y + r + 1])),
+				d:
+					dots(segs.map(([x, y]) => [x - 6, y + r + 2])) +
+					' ' +
+					dots(segs.map(([x, y]) => [x + 8, y + r + 1])),
 				color: P.dark,
 				w: 9
 			},
 			{ k: 'line', d: hairs, color: P.moss, w: 3.4 },
 			...segs.map(([cx, cy, fill]): Prim => ({ k: 'circle', o: { cx, cy, r }, fill, shade: true })),
-			{ k: 'line', d: 'M142 78 C 138 62, 132 56, 124 54 M162 76 C 166 60, 172 54, 178 52', color: P.dark, w: 4 },
+			{
+				k: 'line',
+				d: 'M142 78 C 138 62, 132 56, 124 54 M162 76 C 166 60, 172 54, 178 52',
+				color: P.dark,
+				w: 4
+			},
 			{ k: 'circle', o: { cx: 123, cy: 54, r: 5 }, fill: P.dark },
 			{ k: 'circle', o: { cx: 176, cy: 52, r: 5 }, fill: P.dark },
 			{ k: 'circle', o: { cx: 150, cy: 102, r: 29 }, fill: P.green, shade: true },
@@ -164,9 +182,9 @@ export const NATURE: Record<string, Subject> = {
 			w: 5
 		},
 		{ k: 'ellipse', o: { cx: 100, cy: 128, rx: 26, ry: 44 }, fill: P.slate, shade: true },
-		...pair('M100 88 C 76 92, 58 124, 60 156 C 60 174, 70 184, 80 180 C 92 170, 98 132, 100 88 Z').map(
-			(d): Prim => ({ k: 'path', d, fill: P.sky, op: 0.8, shade: true })
-		),
+		...pair(
+			'M100 88 C 76 92, 58 124, 60 156 C 60 174, 70 184, 80 180 C 92 170, 98 132, 100 88 Z'
+		).map((d): Prim => ({ k: 'path', d, fill: P.sky, op: 0.8, shade: true })),
 		{
 			k: 'line',
 			d: [
@@ -204,25 +222,30 @@ export const NATURE: Record<string, Subject> = {
 		return [
 			{ k: 'line', d: 'M100 120 C 98 150, 104 168, 100 186', color: P.moss, w: 11 },
 			{ k: 'ellipse', o: { cx: 70, cy: 160, rx: 28, ry: 12, rot: 24 }, fill: P.green, shade: true },
-			{ k: 'ellipse', o: { cx: 130, cy: 150, rx: 28, ry: 12, rot: -24 }, fill: P.green, shade: true },
+			{
+				k: 'ellipse',
+				o: { cx: 130, cy: 150, rx: 28, ry: 12, rot: -24 },
+				fill: P.green,
+				shade: true
+			},
 			...petals.filter((_, i) => i % 2),
 			...petals.filter((_, i) => !(i % 2)),
 			{ k: 'circle', o: { cx: 100, cy: 86, r: 32 }, fill: P.brown, shade: true },
 			{
 				k: 'line',
 				d: dots([
-					[100, 82],
-					[88, 76],
-					[112, 76],
-					[90, 92],
-					[110, 92],
-					[100, 66],
-					[100, 98],
-					[80, 86],
-					[120, 86],
-					[86, 64],
-					[114, 64],
-					[100, 104]
+					[100, 86],
+					[88, 80],
+					[112, 80],
+					[90, 96],
+					[110, 96],
+					[100, 70],
+					[100, 102],
+					[80, 90],
+					[120, 90],
+					[86, 68],
+					[114, 68],
+					[100, 108]
 				]),
 				color: P.dark,
 				w: 5
@@ -236,7 +259,12 @@ export const NATURE: Record<string, Subject> = {
 		{ k: 'path', d: 'M100 86 L164 162 L36 162 Z', fill: P.moss, shade: true },
 		{ k: 'path', d: 'M100 64 L148 124 L52 124 Z', fill: P.green, shade: true },
 		{ k: 'path', d: 'M100 44 L132 90 L68 90 Z', fill: P.green, shade: true },
-		{ k: 'line', d: 'M78 112 Q 100 120, 128 104 M60 150 Q 100 158, 146 138', color: P.yellow, w: 3.4 },
+		{
+			k: 'line',
+			d: 'M78 112 Q 100 120, 128 104 M60 150 Q 100 158, 146 138',
+			color: P.yellow,
+			w: 3.4
+		},
 		{ k: 'circle', o: { cx: 92, cy: 78, r: 6.5 }, fill: P.red, shade: true },
 		{ k: 'circle', o: { cx: 116, cy: 100, r: 6.5 }, fill: P.blue, shade: true },
 		{ k: 'circle', o: { cx: 76, cy: 114, r: 6.5 }, fill: P.yellow, shade: true },
@@ -248,12 +276,13 @@ export const NATURE: Record<string, Subject> = {
 	],
 
 	banana: () => {
-		const one = 'M64 54 C 58 110, 92 166, 166 150 C 172 148, 172 140, 164 140 C 112 142, 82 108, 80 56 Z';
+		const one =
+			'M64 54 C 58 110, 92 166, 166 150 C 172 148, 172 140, 164 140 C 112 142, 82 108, 80 56 Z';
 		// Each banana is the same one, shrunk a touch and swung about the stalk.
 		const swing =
 			(deg: number) =>
 			([x, y]: Pt): Pt =>
-				rot(deg, 58, 58)([58 + (x - 72) * 0.86, 58 + (y - 50) * 0.86]);
+				rot(deg, 64, 58)([64 + (x - 72) * 0.86, 58 + (y - 50) * 0.86]);
 		const tip = (deg: number): Prim => {
 			const [cx, cy] = swing(deg)([165, 145]);
 			return { k: 'circle', o: { cx, cy, r: 4.5 }, fill: P.brown };
@@ -266,44 +295,54 @@ export const NATURE: Record<string, Subject> = {
 			{ k: 'path', d: xf(one, swing(12)), fill: P.yellow, shade: true },
 			tip(12),
 			{ k: 'line', d: xf('M72 74 C 78 118, 106 140, 150 144', swing(12)), color: P.gold, w: 3 },
-			{ k: 'rect', x: 49, y: 40, w: 18, h: 24, rx: 4, fill: P.moss, shade: true }
+			{ k: 'rect', x: 55, y: 40, w: 18, h: 24, rx: 4, fill: P.moss, shade: true }
 		];
 	},
 
 	// An open edamame pod with three plump beans, and two that have escaped.
+	// The beans get a wash of yellow so they stand out bright against the pod.
 	beans: () => {
-		const tilt = (d: string) => xf(d, rot(-24, 100, 100));
-		const beansAt: Pt[] = [
-			[66, 98],
-			[100, 96],
-			[134, 98]
-		].map((p) => rot(-24, 100, 100)(p as Pt));
-		return [
-			{ k: 'path', d: tilt('M26 100 C 34 70, 166 66, 176 96 C 170 132, 34 138, 26 100 Z'), fill: P.moss, shade: true },
-			{ k: 'line', d: tilt('M176 96 L186 88'), color: P.moss, w: 7 },
-			{ k: 'path', d: tilt('M38 100 C 50 84, 150 80, 166 96 C 150 104, 50 108, 38 100 Z'), fill: P.dark, op: 0.45 },
-			...beansAt.map(([cx, cy]): Prim => ({
-				k: 'ellipse',
-				o: { cx, cy, rx: 21, ry: 19, rot: -24 },
-				fill: P.green,
-				shade: true
-			})),
-			...beansAt.map(([cx, cy]): Prim => ({
+		const tilt = (d: string) => xf(d, rot(-24, 100, 96));
+		const bean = (cx: number, cy: number, rx: number, ry: number, rot: number): Prim[] => [
+			{ k: 'ellipse', o: { cx, cy, rx, ry, rot }, fill: P.green, shade: true, soft: true },
+			{ k: 'ellipse', o: { cx, cy, rx, ry, rot }, fill: P.yellow, op: 0.3 },
+			{
 				k: 'circle',
-				o: { cx: cx - 7, cy: cy - 7, r: 4 },
+				o: { cx: cx - rx * 0.35, cy: cy - ry * 0.4, r: rx * 0.2 },
 				fill: P.white,
-				op: 0.7
-			})),
+				op: 0.75
+			}
+		];
+		const inPod = (
+			[
+				[64, 92],
+				[100, 90],
+				[136, 92]
+			] as Pt[]
+		).map(rot(-24, 100, 96));
+		return [
 			{
 				k: 'path',
-				d: tilt('M30 104 C 60 106, 140 106, 172 100 C 160 128, 44 132, 30 104 Z'),
+				d: tilt('M22 96 C 30 62, 170 58, 180 92 C 174 130, 30 136, 22 96 Z'),
 				fill: P.moss,
 				shade: true
 			},
-			{ k: 'ellipse', o: { cx: 118, cy: 160, rx: 17, ry: 14, rot: 20 }, fill: P.green, shade: true },
-			{ k: 'ellipse', o: { cx: 152, cy: 146, rx: 15, ry: 13, rot: -10 }, fill: P.green, shade: true },
-			{ k: 'circle', o: { cx: 112, cy: 155, r: 3.5 }, fill: P.white, op: 0.7 },
-			{ k: 'circle', o: { cx: 147, cy: 141, r: 3.2 }, fill: P.white, op: 0.7 }
+			{ k: 'line', d: tilt('M180 92 L188 82'), color: P.moss, w: 7 },
+			{
+				k: 'path',
+				d: tilt('M34 96 C 46 74, 154 70, 170 90 C 154 102, 48 106, 34 96 Z'),
+				fill: P.dark,
+				op: 0.7
+			},
+			...inPod.flatMap(([cx, cy]) => bean(cx, cy, 21, 19, -24)),
+			{
+				k: 'path',
+				d: tilt('M24 102 C 60 116, 140 114, 178 98 C 166 128, 40 134, 24 102 Z'),
+				fill: P.moss,
+				shade: true
+			},
+			...bean(108, 160, 17, 15, 20),
+			...bean(144, 148, 16, 14, -10)
 		];
 	},
 
@@ -332,7 +371,9 @@ export const NATURE: Record<string, Subject> = {
 		return [
 			{
 				k: 'path',
-				d: tilt('M100 58 C 122 58, 134 84, 136 122 C 138 160, 122 184, 100 184 C 78 184, 62 160, 64 122 C 66 84, 78 58, 100 58 Z'),
+				d: tilt(
+					'M100 58 C 122 58, 134 84, 136 122 C 138 160, 122 184, 100 184 C 78 184, 62 160, 64 122 C 66 84, 78 58, 100 58 Z'
+				),
 				fill: P.purple,
 				shade: true
 			},
@@ -361,7 +402,9 @@ export const NATURE: Record<string, Subject> = {
 			{ k: 'line', d: 'M120 74 L 158 44', color: P.moss, w: 2.6 },
 			{
 				k: 'path',
-				d: tilt('M24 116 Q 30 106, 40 106 C 56 64, 144 64, 160 106 Q 170 106, 176 116 Q 170 126, 160 126 C 144 168, 56 168, 40 126 Q 30 126, 24 116 Z'),
+				d: tilt(
+					'M24 116 Q 30 106, 40 106 C 56 64, 144 64, 160 106 Q 170 106, 176 116 Q 170 126, 160 126 C 144 168, 56 168, 40 126 Q 30 126, 24 116 Z'
+				),
 				fill: P.yellow,
 				shade: true
 			},
@@ -397,15 +440,15 @@ export const NATURE: Record<string, Subject> = {
 			const lo = lon + 0.12 * Math.cos(lat * 4.3 - lon * 5.9);
 			return [C[0] + R * 0.93 * Math.cos(la) * Math.sin(lo), C[1] - R * 0.93 * Math.sin(la)];
 		};
-		const lats = [-1.1, -0.72, -0.36, 0, 0.36, 0.72, 1.1];
-		const lons = [-1.3, -0.86, -0.43, 0, 0.43, 0.86, 1.3];
+		const lats = [-1.2, -0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9, 1.2];
+		const lons = [-1.35, -1.0, -0.66, -0.33, 0, 0.33, 0.66, 1.0, 1.35];
 		const f = ([x, y]: Pt) => `${x.toFixed(1)} ${y.toFixed(1)}`;
 		const net: string[] = [];
 		for (const la of lats) net.push('M' + lons.map((lo) => f(P3(la, lo))).join(' L'));
 		for (const lo of lons) net.push('M' + lats.map((la) => f(P3(la, lo))).join(' L'));
 		return [
 			{ k: 'circle', o: { cx: C[0], cy: C[1], r: R }, fill: P.green, shade: true },
-			{ k: 'line', d: net.join(' '), color: P.cream, w: 2.6 },
+			{ k: 'line', d: net.join(' '), color: P.cream, w: 2 },
 			{ k: 'line', d: 'M100 58 L100 40 M84 36 L116 36', color: P.moss, w: 8, cap: 'round' }
 		];
 	},
@@ -420,7 +463,6 @@ export const NATURE: Record<string, Subject> = {
 			fill: P.pink,
 			shade: true
 		},
-		{ k: 'ellipse', o: { cx: 72, cy: 144, rx: 22, ry: 26, rot: 24 }, fill: P.cream, op: 0.3 },
 		{ k: 'line', d: 'M102 66 C 84 92, 82 140, 98 180', color: P.rust, w: 3.4 }
 	],
 
@@ -450,9 +492,23 @@ export const NATURE: Record<string, Subject> = {
 		return [
 			{ k: 'ellipse', o: { cx: 100, cy: 84, rx: 64, ry: 52 }, fill: P.green, shade: true },
 			{ k: 'line', d: stripes, color: P.moss, w: 8 },
-			{ k: 'path', d: 'M28 116 L172 116 C 172 160, 140 186, 100 186 C 60 186, 28 160, 28 116 Z', fill: P.moss, shade: true },
-			{ k: 'path', d: 'M34 116 L166 116 C 166 154, 136 178, 100 178 C 64 178, 34 154, 34 116 Z', fill: P.cream },
-			{ k: 'path', d: 'M40 116 L160 116 C 160 148, 134 170, 100 170 C 66 170, 40 148, 40 116 Z', fill: P.red, shade: true },
+			{
+				k: 'path',
+				d: 'M28 116 L172 116 C 172 160, 140 186, 100 186 C 60 186, 28 160, 28 116 Z',
+				fill: P.moss,
+				shade: true
+			},
+			{
+				k: 'path',
+				d: 'M34 116 L166 116 C 166 154, 136 178, 100 178 C 64 178, 34 154, 34 116 Z',
+				fill: P.cream
+			},
+			{
+				k: 'path',
+				d: 'M40 116 L160 116 C 160 148, 134 170, 100 170 C 66 170, 40 148, 40 116 Z',
+				fill: P.red,
+				shade: true
+			},
 			{
 				k: 'line',
 				d: dots([
