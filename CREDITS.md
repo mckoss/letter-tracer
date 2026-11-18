@@ -20,7 +20,8 @@ community wrapper around an endpoint Microsoft does not document as a public
 API. Microsoft publishes no grant of redistribution rights for that output, and
 the endpoint is nominally there to serve Edge's own reader.
 
-The spoken prompts under `static/sounds/voice/phrase/` **are committed**, at the
+The spoken prompts under `static/sounds/voice/phrase/` and the Japanese kana
+clips under `static/sounds/voice/kana/` **are committed**, at the
 project owner's direction: the app plays them and the PWA precaches them, so
 they have to ship with it. That is a decision made with the above known, not an
 oversight. If it needs undoing later, the alternatives are to settle the

@@ -26,7 +26,9 @@ vite.config.ts.timestamp-*
 .venv/
 
 # Voice clips from scripts/generate_tts.py. The spoken "A is for apple" prompts
-# under voice/phrase/ ARE committed -- the app plays them and the PWA precaches
-# them, so they have to ship. Everything else the script can make is scratch.
+# under voice/phrase/ and the Japanese kana under voice/kana/ ARE committed --
+# the app plays them and the PWA precaches them, so they have to ship.
+# Everything else the script can make is scratch.
 static/sounds/voice/*
 !static/sounds/voice/phrase/
+!static/sounds/voice/kana/
