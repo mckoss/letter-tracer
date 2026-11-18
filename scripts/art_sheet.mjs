@@ -24,7 +24,11 @@ if (si >= 0) {
 	args.splice(si, 2);
 }
 
-const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' });
+const vite = await createServer({
+	server: { middlewareMode: true },
+	appType: 'custom',
+	logLevel: 'error'
+});
 let html;
 try {
 	const { art, SUBJECT_NAMES } = await vite.ssrLoadModule('/src/lib/art/index.ts');

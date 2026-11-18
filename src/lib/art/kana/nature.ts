@@ -168,10 +168,17 @@ export const NATURE: Record<string, Subject> = {
 	// A cicada clinging to a trunk, head up, its clear wings folded like a roof
 	// over the body -- broad and blunt, so it does not read as a fly or a bee.
 	cicada: () => [
-		{ k: 'rect', x: 50, y: 24, w: 100, h: 162, rx: 12, fill: P.brown, shade: true },
+		// The trunk runs off the top and bottom of the backdrop disc, so its ends
+		// are arcs of that disc rather than a box.
+		{
+			k: 'path',
+			d: 'M52 9.8 A 104 104 0 0 1 148 9.8 L 148 194.2 A 104 104 0 0 1 52 194.2 Z',
+			fill: P.brown,
+			shade: true
+		},
 		{
 			k: 'line',
-			d: 'M62 34 C 58 70, 64 100, 58 150 M140 40 C 144 80, 136 120, 142 178 M66 160 C 64 170, 68 178, 66 184',
+			d: 'M62 20 C 58 70, 64 100, 60 186 M140 22 C 144 80, 136 120, 140 188 M120 162 C 118 172, 122 180, 120 192',
 			color: P.dark,
 			w: 3
 		},

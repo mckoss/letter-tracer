@@ -121,9 +121,15 @@ describe('kana', () => {
 					const w = kanaWord(c, ws);
 					if (w && !have.has(w.picture)) missing.add(w.picture);
 				}
-		for (const p of missing) expect(todo, p).toMatch(new RegExp(`^\\| ${p} +\\|`, 'm'));
+		const listed = [...todo.matchAll(/^\| ([a-z][a-z ]*?) +\|/gm)].map((m) => m[1]);
+		expect(
+			[...missing].filter((p) => !listed.includes(p)),
+			'not drawn and not listed'
+		).toEqual([]);
 		// And nothing lingers there once it is drawn.
-		for (const row of todo.matchAll(/^\| ([a-z][a-z ]*?) +\|/gm))
-			expect(have.has(row[1]), `${row[1]} is drawn; take it off the list`).toBe(false);
+		expect(
+			listed.filter((p) => have.has(p)),
+			'drawn but still listed'
+		).toEqual([]);
 	});
 });

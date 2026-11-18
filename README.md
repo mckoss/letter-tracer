@@ -35,8 +35,8 @@ with no network at all.
   あひるの あ). Romaji is shown, never spoken, for a grown-up who does not read
   kana. Hiragana gets native words and katakana gets loanwords, which is where
   most of the vehicles are (トラック, ヘリコプター, タクシー). Stroke data is from
-  KanjiVG; see [`CREDITS.md`](CREDITS.md). Pictures still to draw for the kana
-  words are listed in [`docs/kana-pictures.md`](docs/kana-pictures.md).
+  KanjiVG; see [`CREDITS.md`](CREDITS.md). Every kana word has its own
+  picture, in the same poster style.
 - **A cursive mode**, switched from the home screen: A–Z and a–z in the joined,
   slanted hand taught in 20th-century American schools (Zaner-Bloser / Palmer),
   lead-in and exit stroke on every lowercase letter, and the word under the
@@ -61,7 +61,7 @@ with no network at all.
 
 The word pictures and the letterforms are hand-authored SVG, drawn in a
 posterised style with one shared light source -- 49 pictures across the two word
-sets. See [`CREDITS.md`](CREDITS.md) for the sounds.
+sets, and 82 more for the kana words. See [`CREDITS.md`](CREDITS.md) for the sounds.
 
 ## Running it
 
