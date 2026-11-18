@@ -27,6 +27,16 @@ with no network at all.
 ## What it does
 
 - **62 glyphs** — A–Z, a–z and 0–9, in a plain manuscript hand on ruled lines.
+- **Hiragana and katakana** — the basic 46 of each, set out like the gojūon
+  chart, written in a square with a dashed cross the way Japanese practice
+  paper is printed. A small number at the start of each stroke gives the stroke
+  order, and fades once that stroke is drawn. Everything spoken is in Japanese:
+  the kana's sound, then its word, as Japanese children learn them (あ。
+  あひるの あ). Romaji is shown, never spoken, for a grown-up who does not read
+  kana. Hiragana gets native words and katakana gets loanwords, which is where
+  most of the vehicles are (トラック, ヘリコプター, タクシー). Stroke data is from
+  KanjiVG; see [`CREDITS.md`](CREDITS.md). Pictures still to draw for the kana
+  words are listed in [`docs/kana-pictures.md`](docs/kana-pictures.md).
 - **A cursive mode**, switched from the home screen: A–Z and a–z in the joined,
   slanted hand taught in 20th-century American schools (Zaner-Bloser / Palmer),
   lead-in and exit stroke on every lowercase letter, and the word under the
@@ -115,7 +125,12 @@ python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
 .venv/bin/python scripts/generate_tts.py --phrases          # all 26
 .venv/bin/python scripts/generate_tts.py --phrases q --force # just re-do Q
 .venv/bin/python scripts/generate_tts.py "Good job"          # any phrase
+.venv/bin/python scripts/generate_tts.py --kana             # every kana, in Japanese
 ```
+
+The kana clips go to `static/sounds/voice/kana/`, one per sound and word, read
+from `src/lib/kana-words.json` and shared between hiragana and katakana where
+the word is the same.
 
 The script rewrites `src/lib/voice-clips.ts` with the letters that have a clip,
 so a letter with nothing recorded simply stays quiet. See `CREDITS.md` for the
@@ -127,6 +142,8 @@ licensing position on the voice.
 | -------------------------------------- | --------------------------------------------------- |
 | `src/lib/glyphs/data.ts`               | every letterform, as ordered SVG path strings       |
 | `src/lib/glyphs/cursive-strokes.ts`    | the cursive letters, generated from handwriting     |
+| `src/lib/glyphs/kana-strokes.ts`       | hiragana and katakana, generated from KanjiVG       |
+| `src/lib/kana-words.json`              | romaji and the word for every kana                  |
 | `src/routes/capture`                   | handwriting capture: write each letter, export JSON |
 | `src/lib/trace/engine.ts`              | the tracing engine: pure geometry, unit tested      |
 | `src/lib/components/TraceStage.svelte` | the tracing screen                                  |

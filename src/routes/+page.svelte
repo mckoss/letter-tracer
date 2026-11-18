@@ -5,15 +5,19 @@
 	import {
 		HANDS,
 		HAND_LABELS,
+		KANA_VIEW,
 		ORDER,
 		SETS,
 		SET_LABELS,
 		glyphKey,
 		glyphsFor,
+		isKanaSet,
 		type Hand,
 		type StrokeSet
 	} from '$lib/glyphs/data';
 	import { CURSIVE_VIEW } from '$lib/glyphs/cursive';
+	import { STROKE_NUMBERS } from '$lib/glyphs/kana-strokes';
+	import { chart, kanaWord, romaji } from '$lib/kana';
 	import { progress } from '$lib/progress.svelte';
 	import { WORD_SET_KEYS, WORD_SET_LABELS, wordFor, wordKey, type WordSet } from '$lib/words';
 	import Confetti from '$lib/components/Confetti.svelte';
@@ -25,7 +29,7 @@
 	import TraceStage from '$lib/components/TraceStage.svelte';
 	import type { Stars as StarCount } from '$lib/trace/engine';
 
-	const SET_KEYS: StrokeSet[] = ['upper', 'lower', 'digits'];
+	const SET_KEYS: StrokeSet[] = ['upper', 'lower', 'digits', 'hiragana', 'katakana'];
 
 	let set = $state<StrokeSet>(progress.data.lastSet);
 	let view = $state<'grid' | 'trace'>('grid');
@@ -47,7 +51,18 @@
 	// prompts. Read straight off the store so switching sets redraws the letter
 	// the child is already looking at.
 	const words = $derived(progress.data.words);
-	const picture = $derived(art(wordKey(char, words), 96));
+	const kana = $derived(isKanaSet(set));
+	/** The kana's own word, in Japanese, with its romaji for a grown-up. */
+	const kword = $derived(kana ? kanaWord(char, words) : null);
+	const picture = $derived(
+		kana ? (kword ? art(kword.picture, 96) : null) : art(wordKey(char, words), 96)
+	);
+	/**
+	 * The grid, in the order it is laid out. The kana are set out as the gojūon
+	 * chart is printed, five to a row with gaps in the や and わ rows, so a null
+	 * is a gap; everything else just flows.
+	 */
+	const cells = $derived(isKanaSet(set) ? chart(set) : chars);
 	/**
 	 * The word under the picture. Print follows the case of the glyph -- APPLE
 	 * for capitals -- but nobody writes a word in cursive capitals, so a cursive
@@ -199,6 +214,10 @@
 					<rect x="19.6" y="17.6" width="3.6" height="3.6" rx="1" fill="#f3e7ce" />
 				</svg>
 			</button>
+			{#if kana}
+				<!-- The sound, for whoever is helping and cannot read kana. -->
+				<span class="romaji" aria-label="Sounds like {romaji(char)}">{romaji(char)}</span>
+			{/if}
 		{:else}
 			<span class="brand">Letter Tracer</span>
 		{/if}
@@ -222,7 +241,7 @@
 
 	{#if view === 'grid'}
 		<div class="picker">
-			<div class="seg" role="group" aria-label="Character set">
+			<div class="seg sets" role="group" aria-label="Character set">
 				{#each SET_KEYS as k (k)}
 					<button type="button" aria-pressed={set === k} onclick={() => pick(k)}>
 						{SET_LABELS[k]}
@@ -230,13 +249,16 @@
 				{/each}
 			</div>
 
-			<div class="seg small hand" role="group" aria-label="Handwriting">
-				{#each HANDS as k (k)}
-					<button type="button" aria-pressed={hand === k} onclick={() => pickHand(k)}>
-						{HAND_LABELS[k]}
-					</button>
-				{/each}
-			</div>
+			<!-- Kana have no cursive; the switch would do nothing. -->
+			{#if !kana}
+				<div class="seg small hand" role="group" aria-label="Handwriting">
+					{#each HANDS as k (k)}
+						<button type="button" aria-pressed={hand === k} onclick={() => pickHand(k)}>
+							{HAND_LABELS[k]}
+						</button>
+					{/each}
+				</div>
+			{/if}
 
 			<div class="seg small" role="group" aria-label="Picture words">
 				{#each WORD_SET_KEYS as k (k)}
@@ -247,16 +269,30 @@
 			</div>
 		</div>
 
-		<div class="grid">
-			{#each chars as c, i (c)}
-				<button class="tile" onclick={() => open(i)}>
-					<svg viewBox={hand === 'cursive' ? CURSIVE_VIEW.tile : '-6 0 112 148'} aria-hidden="true">
-						{#each glyphs[c] as d, j (j)}
-							<path {d} />
-						{/each}
-					</svg>
-					<Stars value={progress.bestFor(glyphKey(c, hand))} />
-				</button>
+		<div class="grid" class:chart={kana}>
+			{#each cells as c, n (c ?? `gap${n}`)}
+				{#if c === null}
+					<span class="gap" aria-hidden="true"></span>
+				{:else}
+					<button class="tile" onclick={() => open(chars.indexOf(c))}>
+						<svg
+							viewBox={kana
+								? KANA_VIEW.tile
+								: hand === 'cursive'
+									? CURSIVE_VIEW.tile
+									: '-6 0 112 148'}
+							aria-hidden="true"
+						>
+							{#each glyphs[c] as d, j (j)}
+								<path {d} />
+							{/each}
+						</svg>
+						{#if kana}
+							<span class="tile-romaji">{romaji(c)}</span>
+						{/if}
+						<Stars value={progress.bestFor(glyphKey(c, hand))} />
+					</button>
+				{/if}
 			{/each}
 		</div>
 
@@ -271,7 +307,9 @@
 					strokes={glyphs[char]}
 					{char}
 					onDone={done}
-					viewBox={hand === 'cursive' ? CURSIVE_VIEW.stage : undefined}
+					viewBox={kana ? KANA_VIEW.stage : hand === 'cursive' ? CURSIVE_VIEW.stage : undefined}
+					square={kana}
+					numbers={kana ? (STROKE_NUMBERS[char] ?? []) : []}
 				/>
 			{/key}
 			{#if earned !== null}
@@ -284,7 +322,16 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- markup generated locally -->
 				{@html picture}
 			{/if}
-			<GlyphWord text={word} {hand} height={30} />
+			{#if kana}
+				{#if kword}
+					<div class="kword">
+						<span class="kana-word" lang="ja">{kword.word}</span>
+						<span class="kana-romaji">{kword.romaji}</span>
+					</div>
+				{/if}
+			{:else}
+				<GlyphWord text={word} {hand} height={30} />
+			{/if}
 		</div>
 
 		<nav class="nav">
@@ -406,6 +453,7 @@
 		overflow: hidden;
 	}
 	header {
+		position: relative;
 		flex: 0 0 56px;
 		display: flex;
 		align-items: center;
@@ -416,6 +464,16 @@
 	.brand {
 		font-weight: 700;
 		letter-spacing: -0.01em;
+	}
+	/* The kana's sound, centred over the stage. Quiet: it is for the adult. */
+	.romaji {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 22px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: #6b6072;
 	}
 	.score {
 		font-weight: 700;
@@ -460,6 +518,10 @@
 		color: #6b6072;
 		cursor: pointer;
 	}
+	/* Five sets have to fit a phone's width on one line. */
+	.seg.sets button {
+		padding: 9px 13px;
+	}
 	.seg button:last-child {
 		border-right: 0;
 	}
@@ -486,6 +548,34 @@
 		grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
 		gap: 8px;
 		padding: 0 16px;
+	}
+	/* The gojūon chart: five across, as it is printed. */
+	.grid.chart {
+		grid-template-columns: repeat(5, 1fr);
+	}
+	.tile-romaji {
+		font-size: 11px;
+		line-height: 1;
+		color: #736b79;
+	}
+	.kword {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+	}
+	.kana-word {
+		font-size: 30px;
+		font-weight: 700;
+		line-height: 1.1;
+		color: #3b3039;
+		font-family:
+			'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic',
+			sans-serif;
+	}
+	.kana-romaji {
+		font-size: 14px;
+		color: #736b79;
 	}
 	.tile {
 		background: #fff;
