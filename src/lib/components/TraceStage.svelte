@@ -51,13 +51,26 @@
 		strokes,
 		char,
 		onDone,
-		viewBox = '-10 -8 120 158'
+		viewBox = '-10 -8 120 158',
+		square = false,
+		numbers = []
 	}: {
 		strokes: string[];
 		char: string;
 		onDone: (stars: Stars) => void;
 		/** The glyph frame. Cursive is wider and deeper than print, so it has its own. */
 		viewBox?: string;
+		/**
+		 * Kana are written in a square with a dashed cross through it, the way
+		 * Japanese practice paper is printed, rather than on ruled lines.
+		 */
+		square?: boolean;
+		/**
+		 * Where to print each stroke's number, by stroke, when the order is worth
+		 * reading off the page: the kana have one, and it is half of what there is
+		 * to learn about them. Empty prints none.
+		 */
+		numbers?: [number, number][];
 	} = $props();
 
 	// The ruled lines stop short of the frame's sides, as they always have.
@@ -432,11 +445,24 @@
 	onpointerup={onUp}
 	onpointercancel={onUp}
 >
-	<line class="rule" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.mid} y2={GUIDE.mid} />
-	<line class="rule base" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.base} y2={GUIDE.base} />
+	{#if square}
+		<rect class="rule base" x="0" y={GUIDE.cap} width="100" height="100" rx="3" fill="none" />
+		<line class="rule cross" x1="50" x2="50" y1={GUIDE.cap} y2={GUIDE.base} />
+		<line class="rule cross" x1="0" x2="100" y1={GUIDE.mid} y2={GUIDE.mid} />
+	{:else}
+		<line class="rule" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.mid} y2={GUIDE.mid} />
+		<line class="rule base" x1={ruleX[0]} x2={ruleX[1]} y1={GUIDE.base} y2={GUIDE.base} />
+	{/if}
 
 	{#each strokes as d, i (i)}
 		<path {d} class="guide" />
+	{/each}
+
+	<!-- Under the ink, so a child's line runs over a number rather than round it.
+	     A drawn stroke's number fades back: the ones still bright are what is
+	     left to do, in order. -->
+	{#each numbers as [x, y], i (i)}
+		<text class="num" class:spent={done[i]} {x} {y}>{i + 1}</text>
 	{/each}
 
 	<!-- One translucent layer rather than translucent strokes: group opacity
@@ -486,6 +512,19 @@
 	}
 	.rule.base {
 		stroke: #d5cdda;
+	}
+	.rule.cross {
+		stroke-dasharray: 4 4;
+	}
+	.num {
+		font-size: 7.5px;
+		font-weight: 700;
+		fill: #8a7f99;
+		transition: opacity 240ms ease;
+		pointer-events: none;
+	}
+	.num.spent {
+		opacity: 0.3;
 	}
 	/* Hairline worksheet dashes -- not a row of fat dots. Non-scaling keeps it
 	   the same fine line whatever size the glyph is drawn at. */

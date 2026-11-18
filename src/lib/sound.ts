@@ -7,7 +7,8 @@
 
 import { browser } from '$app/environment';
 import { base } from '$app/paths';
-import { PHRASES } from './voice-clips';
+import { KANA_PHRASES, PHRASES } from './voice-clips';
+import { isKana, kanaPhraseStem } from './kana';
 import { phraseStem, type WordSet } from './words';
 
 export type Cue = 'cheer' | 'sad';
@@ -143,13 +144,16 @@ export function whenQuiet(then: () => void, gap = GAP): () => void {
  */
 export function speak(char: string, set: WordSet = 'general') {
 	stopWaiting();
-	const stem = phraseStem(char, set);
+	// A kana is spoken in Japanese -- its sound, then its word -- from its own
+	// directory; see `kanaPhraseStem`.
+	const kana = isKana(char);
+	const stem = kana ? kanaPhraseStem(char, set) : phraseStem(char, set);
 	const a = voiceEl();
-	if (!a || !PHRASES.includes(stem)) return;
+	if (!a || !(kana ? KANA_PHRASES : PHRASES).includes(stem)) return;
 	a.pause();
 	waiting = whenQuiet(() => {
 		waiting = null;
-		a.src = `${base}/sounds/voice/phrase/${stem}.mp3`;
+		a.src = `${base}/sounds/voice/${kana ? 'kana' : 'phrase'}/${stem}.mp3`;
 		a.currentTime = 0;
 		a.play().catch(() => {
 			// Not unlocked yet, or the file is not there. Quiet is fine.

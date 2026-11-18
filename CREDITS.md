@@ -31,8 +31,21 @@ better.
 
 ## Artwork
 
-All illustrations and letterforms are hand-authored SVG, original to this
-project. See `src/lib/art/` and `src/lib/glyphs/`.
+All illustrations and the Latin letterforms are hand-authored SVG, original to
+this project. See `src/lib/art/` and `src/lib/glyphs/`.
+
+## Kana stroke data
+
+The hiragana and katakana in `src/lib/glyphs/kana-strokes.ts` are from
+[KanjiVG](https://kanjivg.tagaini.net/), copyright Ulrich Apel and the KanjiVG
+contributors, under
+[CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). That licence
+requires attribution, so this credit has to stay while the data does. Each
+stroke, its order, its direction and the position of its number are KanjiVG's;
+`scripts/kanjivg_to_kana.mjs` only rescales them to the app's box and rewrites
+the paths in absolute commands. The adapted file is under the same CC BY-SA 3.0
+licence, which is the share-alike condition; the rest of the app is not
+affected by it.
 
 `blaze` is a generic monster truck, not a likeness of any particular television
 character.

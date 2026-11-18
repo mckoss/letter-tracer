@@ -54,3 +54,7 @@ export const PHRASES: readonly string[] = [
 	'z-zebra',
 	'z-zeppelin'
 ];
+
+// The spoken kana, as <sound>-<word> (or the sound alone, for を), in
+// static/sounds/voice/kana/.
+export const KANA_PHRASES: readonly string[] = [];

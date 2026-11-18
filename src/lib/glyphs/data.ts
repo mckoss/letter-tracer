@@ -18,11 +18,24 @@
 // as a round cap and completes on a tap rather than a drag.
 
 import { CURSIVE_LOWER, CURSIVE_UPPER } from './cursive';
+import { HIRAGANA_STROKES, KATAKANA_STROKES } from './kana-strokes';
+import { chart } from '../kana';
 
 export const GUIDE = { cap: 10, mid: 60, base: 110, desc: 138 } as const;
 export const DOT_LENGTH = 6;
 
-export type StrokeSet = 'upper' | 'lower' | 'digits';
+export type StrokeSet = 'upper' | 'lower' | 'digits' | 'hiragana' | 'katakana';
+
+/** Hiragana and katakana: written in a square, not on ruled lines. */
+export function isKanaSet(set: StrokeSet): set is 'hiragana' | 'katakana' {
+	return set === 'hiragana' || set === 'katakana';
+}
+
+/**
+ * The kana come from KanjiVG (see `kana-strokes.ts`), fitted to a 100-unit
+ * square at y 10-110. Their frames on the tracing stage and the grid tile.
+ */
+export const KANA_VIEW = { stage: '-8 2 116 116', tile: '-6 4 112 112' } as const;
 
 export const UPPER: Record<string, string[]> = {
 	A: ['M50 10 L22 110', 'M50 10 L78 110', 'M32 76 L68 76'],
@@ -113,25 +126,31 @@ export const DIGITS: Record<string, string[]> = {
 export const SETS: Record<StrokeSet, Record<string, string[]>> = {
 	upper: UPPER,
 	lower: LOWER,
-	digits: DIGITS
+	digits: DIGITS,
+	hiragana: HIRAGANA_STROKES,
+	katakana: KATAKANA_STROKES
 };
 
 export const SET_LABELS: Record<StrokeSet, string> = {
 	upper: 'ABC',
 	lower: 'abc',
-	digits: '123'
+	digits: '123',
+	hiragana: 'あいう',
+	katakana: 'アイウ'
 };
 
 /** Presentation order for each set. */
 export const ORDER: Record<StrokeSet, string[]> = {
 	upper: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
 	lower: [...'abcdefghijklmnopqrstuvwxyz'],
-	digits: [...'0123456789']
+	digits: [...'0123456789'],
+	hiragana: chart('hiragana').filter((c): c is string => c !== null),
+	katakana: chart('katakana').filter((c): c is string => c !== null)
 };
 
 /**
  * Which hand the letters are written in: the manuscript print above, or the
- * joined cursive in `cursive.ts`. Numbers are the same in both.
+ * joined cursive in `cursive.ts`. Numbers and kana are the same in both.
  */
 export type Hand = 'print' | 'cursive';
 
@@ -145,7 +164,9 @@ export const HAND_LABELS: Record<Hand, string> = {
 export const CURSIVE_SETS: Record<StrokeSet, Record<string, string[]>> = {
 	upper: CURSIVE_UPPER,
 	lower: CURSIVE_LOWER,
-	digits: DIGITS
+	digits: DIGITS,
+	hiragana: HIRAGANA_STROKES,
+	katakana: KATAKANA_STROKES
 };
 
 /** The glyphs of a set, in the hand asked for. */
@@ -159,5 +180,5 @@ export function glyphsFor(set: StrokeSet, hand: Hand): Record<string, string[]> 
  * way, so it keeps one.
  */
 export function glyphKey(char: string, hand: Hand): string {
-	return hand === 'cursive' && !(char >= '0' && char <= '9') ? `cursive:${char}` : char;
+	return hand === 'cursive' && /^[A-Za-z]$/.test(char) ? `cursive:${char}` : char;
 }
