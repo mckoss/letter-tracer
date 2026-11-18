@@ -60,6 +60,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -190,7 +191,13 @@ def to_katakana(ch: str) -> str:
 def kana_line_list() -> list[tuple[str, str]]:
     """Every kana clip, as (name, text) pairs: the sound, then its word.
 
-    "あ。あひるの ア" -- the kana alone, then "the a of ahiru". The kana is handed
+    "ア", then "あひるの ア" -- the kana alone, then "the a of ahiru". The two
+    halves are recorded separately and joined (see `join`): asked for in one
+    go, the engine all but swallows a lone kana at the very start of a clip --
+    the コ of "コ。 コアラの コ" came back at -71 dB and was trimmed away as
+    silence. And the lone kana goes without a full stop: "コ。" on its own
+    came back at -60 dB where "コ" is full voice. A `|` in the text marks where
+    to split. The kana is handed
     to the speech engine in katakana even when the child is tracing hiragana:
     it sounds the same, and a lone は or へ in hiragana tempts the engine into
     reading it as the particle (wa, e) rather than the kana (ha, he).
@@ -210,9 +217,9 @@ def kana_line_list() -> list[tuple[str, str]]:
             for word_set in ("general", "vehicles"):
                 w = entry[word_set] or entry["general"]
                 if w is None:
-                    lines.setdefault(r, f"{sound}。")
+                    lines.setdefault(r, sound)
                 else:
-                    lines.setdefault(f"{r}-{kana_slug(w[1])}", f"{sound}。 {w[0]}の {sound}。")
+                    lines.setdefault(f"{r}-{kana_slug(w[1])}", f"{sound}|{w[0]}の {sound}。")
     return sorted(lines.items())
 
 
@@ -269,7 +276,10 @@ def full_line_list() -> list[tuple[str, str]]:
 async def speak(text: str, dest: Path, voice: str, rate: str) -> None:
     import edge_tts
 
-    await edge_tts.Communicate(text, voice, rate=rate).save(str(dest))
+    # aiohttp ignores HTTPS_PROXY unless told, which in a sandbox that only
+    # reaches the internet through one shows up as a DNS failure.
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or None
+    await edge_tts.Communicate(text, voice, rate=rate, proxy=proxy).save(str(dest))
 
 
 def polish(raw: Path, dest: Path) -> bool:
@@ -290,6 +300,39 @@ def polish(raw: Path, dest: Path) -> bool:
     )
     raw.unlink(missing_ok=True)
     return True
+
+
+# The pause between the kana and its word, when they are recorded apart.
+JOIN_GAP = 0.45
+
+
+def join(raws: list[Path], dest: Path) -> None:
+    """Trim each part, join them with a short pause, and normalise the whole."""
+    trim_both = f"{TRIM},areverse,{TRIM},areverse"
+    inputs: list[str] = []
+    chain = []
+    for i, raw in enumerate(raws):
+        inputs += ["-i", str(raw)]
+        chain.append(f"[{i}:a]{trim_both},aresample=24000,aformat=channel_layouts=mono[p{i}]")
+    pieces = []
+    for i in range(len(raws)):
+        if i:
+            chain.append(f"anullsrc=r=24000:cl=mono,atrim=0:{JOIN_GAP}[g{i}]")
+            pieces.append(f"[g{i}]")
+        pieces.append(f"[p{i}]")
+    chain.append(f"{''.join(pieces)}concat=n={len(pieces)}:v=0:a=1,{LOUDNORM}[out]")
+    subprocess.run(
+        # fmt: off
+        [
+            "ffmpeg", "-y", "-loglevel", "error", *inputs,
+            "-filter_complex", ";".join(chain), "-map", "[out]",
+            "-ac", "1", "-ar", "24000", "-b:a", "48k", str(dest),
+        ],
+        # fmt: on
+        check=True,
+    )
+    for raw in raws:
+        raw.unlink(missing_ok=True)
 
 
 def main() -> None:
@@ -387,14 +430,20 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         for i, (name, text) in enumerate(todo, 1):
             dest = args.out / f"{name}.mp3"
-            raw = Path(tmp) / f"{name}.raw.mp3"
+            parts = text.split("|")
+            raws = [Path(tmp) / f"{name}.{i}.raw.mp3" for i in range(len(parts))]
             try:
-                asyncio.run(speak(text, raw, args.voice, args.rate))
+                for part, out in zip(parts, raws):
+                    asyncio.run(speak(part, out, args.voice, args.rate))
             except Exception as e:  # the service, the network, a renamed voice
                 sys.exit(f"\n{name}: {type(e).__name__}: {e}")
-            if args.raw:
-                shutil.move(str(raw), str(dest))
-            elif not polish(raw, dest) and not warned:
+            if len(parts) > 1:
+                if not shutil.which("ffmpeg"):
+                    sys.exit(f"{name}: joining a clip from its parts needs ffmpeg")
+                join(raws, dest)
+            elif args.raw:
+                shutil.move(str(raws[0]), str(dest))
+            elif not polish(raws[0], dest) and not warned:
                 print("ffmpeg not found: keeping raw output, un-trimmed and un-normalised")
                 warned = True
             print(f"[{i}/{len(todo)}] {shown(dest)}  {text!r}  {dest.stat().st_size:,}B")
