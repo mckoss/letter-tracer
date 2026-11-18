@@ -53,59 +53,112 @@ const tube = (a: Pt, b: Pt, c: Pt, d: Pt, w0: number, w1: number, n = 24): strin
 	);
 };
 
+/** Shift absolute coordinates in an SVG path string; relative ones move with them. */
+const shiftPath = (d: string, dx: number, dy: number): string => {
+	let cmd = '';
+	let i = 0;
+	return d.replace(/[A-Za-z]|-?\d*\.?\d+/g, (tok) => {
+		if (/[A-Za-z]/.test(tok)) {
+			cmd = tok;
+			i = 0;
+			return tok;
+		}
+		const n = Number(tok);
+		const k = i++;
+		if (cmd !== cmd.toUpperCase() || cmd === 'Z') return tok;
+		const axis =
+			cmd === 'H'
+				? 0
+				: cmd === 'V'
+					? 1
+					: cmd === 'A'
+						? k % 7 === 5
+							? 0
+							: k % 7 === 6
+								? 1
+								: -1
+						: k % 2;
+		return axis === 0 ? String(n + dx) : axis === 1 ? String(n + dy) : tok;
+	});
+};
+
+/** Move a whole picture, to centre it on the backdrop. */
+const nudge = (dx: number, dy: number, prims: Prim[]): Prim[] =>
+	prims.map((p): Prim => {
+		switch (p.k) {
+			case 'path':
+				return { ...p, d: shiftPath(p.d, dx, dy) };
+			case 'line':
+				return { ...p, d: shiftPath(p.d, dx, dy) };
+			case 'ellipse':
+				return { ...p, o: { ...p.o, cx: p.o.cx + dx, cy: p.o.cy + dy } };
+			case 'circle':
+				return { ...p, o: { ...p.o, cx: p.o.cx + dx, cy: p.o.cy + dy } };
+			case 'rect':
+				return {
+					...p,
+					x: p.x + dx,
+					y: p.y + dy,
+					cx: p.cx === undefined ? undefined : p.cx + dx,
+					cy: p.cy === undefined ? undefined : p.cy + dy
+				};
+		}
+	});
+
 export const ANIMALS2: Record<string, Subject> = {
 	// Side view, facing left, mouth open in a grin.
-	crocodile: () => [
-		// Far legs, behind the body.
-		{ k: 'rect', x: 84, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
-		{ k: 'rect', x: 140, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
-		{
-			k: 'path',
-			d: tube([140, 124], [164, 126], [178, 114], [174, 88], 30, 8),
-			fill: P.green,
-			shade: true
-		},
-		{ k: 'ellipse', o: { cx: 114, cy: 120, rx: 52, ry: 26 }, fill: P.green, shade: true },
-		{
-			k: 'ellipse',
-			o: { cx: 112, cy: 138, rx: 36, ry: 6 },
-			fill: P.sand,
-			shade: true,
-			soft: true
-		},
-		// Ridges down the back.
-		{
-			k: 'path',
-			d: 'M86 102 l6 -9 l6 9 Z M104 99 l6 -9 l6 9 Z M122 99 l6 -9 l6 9 Z M140 103 l6 -9 l6 9 Z',
-			fill: P.moss
-		},
-		// Inside of the mouth, then the teeth, then the jaws over them.
-		{ k: 'path', d: 'M30 112 L100 112 L100 134 L34 132 Z', fill: P.pink },
-		{
-			k: 'path',
-			d: 'M36 115 l5 8 l5 -8 Z M52 115 l5 8 l5 -8 Z M68 115 l5 8 l5 -8 Z M44 133 l5 -8 l5 8 Z M60 133 l5 -8 l5 8 Z M76 133 l5 -8 l5 8 Z',
-			fill: P.white
-		},
-		{
-			k: 'path',
-			d: 'M106 118 C 100 96, 80 90, 60 94 C 44 97, 30 99, 24 104 C 20 109, 22 116, 30 116 L 106 116 Z',
-			fill: P.green,
-			shade: true
-		},
-		{
-			k: 'path',
-			d: 'M106 128 C 96 144, 64 146, 40 142 C 28 140, 24 134, 30 131 L 106 132 Z',
-			fill: P.green,
-			shade: true
-		},
-		// Near legs.
-		{ k: 'rect', x: 72, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
-		{ k: 'rect', x: 128, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
-		// The eye sits on a bump on top of the head.
-		{ k: 'circle', o: { cx: 80, cy: 90, r: 15 }, fill: P.green, shade: true },
-		{ k: 'circle', o: { cx: 32, cy: 102, r: 3 }, fill: P.dark },
-		...eye(81, 88, 7)
-	],
+	crocodile: () =>
+		nudge(0, -12, [
+			// Far legs, behind the body.
+			{ k: 'rect', x: 84, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
+			{ k: 'rect', x: 140, y: 128, w: 16, h: 30, rx: 8, fill: P.moss, shade: true },
+			{
+				k: 'path',
+				d: tube([140, 124], [164, 126], [178, 114], [174, 88], 30, 8),
+				fill: P.green,
+				shade: true
+			},
+			{ k: 'ellipse', o: { cx: 114, cy: 120, rx: 52, ry: 26 }, fill: P.green, shade: true },
+			{
+				k: 'ellipse',
+				o: { cx: 112, cy: 138, rx: 36, ry: 6 },
+				fill: P.sand,
+				shade: true,
+				soft: true
+			},
+			// Ridges down the back.
+			{
+				k: 'path',
+				d: 'M86 102 l6 -9 l6 9 Z M104 99 l6 -9 l6 9 Z M122 99 l6 -9 l6 9 Z M140 103 l6 -9 l6 9 Z',
+				fill: P.moss
+			},
+			// Inside of the mouth, then the teeth, then the jaws over them.
+			{ k: 'path', d: 'M30 112 L100 112 L100 134 L34 132 Z', fill: P.pink },
+			{
+				k: 'path',
+				d: 'M36 115 l5 8 l5 -8 Z M52 115 l5 8 l5 -8 Z M68 115 l5 8 l5 -8 Z M44 133 l5 -8 l5 8 Z M60 133 l5 -8 l5 8 Z M76 133 l5 -8 l5 8 Z',
+				fill: P.white
+			},
+			{
+				k: 'path',
+				d: 'M106 118 C 100 96, 80 90, 60 94 C 44 97, 30 99, 24 104 C 20 109, 22 116, 30 116 L 106 116 Z',
+				fill: P.green,
+				shade: true
+			},
+			{
+				k: 'path',
+				d: 'M106 128 C 96 144, 64 146, 40 142 C 28 140, 24 134, 30 131 L 106 132 Z',
+				fill: P.green,
+				shade: true
+			},
+			// Near legs.
+			{ k: 'rect', x: 72, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
+			{ k: 'rect', x: 128, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
+			// The eye sits on a bump on top of the head.
+			{ k: 'circle', o: { cx: 80, cy: 90, r: 15 }, fill: P.green, shade: true },
+			{ k: 'circle', o: { cx: 32, cy: 102, r: 3 }, fill: P.dark },
+			...eye(81, 88, 7)
+		]),
 
 	// Leaping over a wave: an arched grey body with a beak and a dorsal fin, so
 	// it reads apart from the round blue whale.
@@ -257,23 +310,71 @@ export const ANIMALS2: Record<string, Subject> = {
 	octopus: () => [
 		...(
 			[
-				[[72, 116], [54, 140], [30, 150], [36, 172]],
-				[[86, 122], [78, 150], [62, 168], [72, 182]],
-				[[114, 122], [122, 150], [138, 168], [128, 182]],
-				[[128, 116], [146, 140], [170, 150], [164, 172]]
+				[
+					[72, 116],
+					[54, 140],
+					[30, 150],
+					[36, 172]
+				],
+				[
+					[86, 122],
+					[78, 150],
+					[62, 168],
+					[72, 182]
+				],
+				[
+					[114, 122],
+					[122, 150],
+					[138, 168],
+					[128, 182]
+				],
+				[
+					[128, 116],
+					[146, 140],
+					[170, 150],
+					[164, 172]
+				]
 			] as Pt[][]
-		).map(
-			([a, b, c, d]): Prim => ({ k: 'path', d: tube(a, b, c, d, 22, 10), fill: P.red, shade: true })
-		),
+		).map(([a, b, c, d]): Prim => ({
+			k: 'path',
+			d: tube(a, b, c, d, 22, 10),
+			fill: P.red,
+			shade: true
+		})),
 		// Each tip curls back up on itself.
 		...(
 			[
-				[[36, 170], [34, 186], [54, 186], [50, 170]],
-				[[72, 180], [80, 190], [94, 180], [86, 170]],
-				[[128, 180], [120, 190], [106, 180], [114, 170]],
-				[[164, 170], [166, 186], [146, 186], [150, 170]]
+				[
+					[36, 170],
+					[34, 186],
+					[54, 186],
+					[50, 170]
+				],
+				[
+					[72, 180],
+					[80, 190],
+					[94, 180],
+					[86, 170]
+				],
+				[
+					[128, 180],
+					[120, 190],
+					[106, 180],
+					[114, 170]
+				],
+				[
+					[164, 170],
+					[166, 186],
+					[146, 186],
+					[150, 170]
+				]
 			] as Pt[][]
-		).map(([a, b, c, d]): Prim => ({ k: 'path', d: tube(a, b, c, d, 10, 6), fill: P.red, shade: true })),
+		).map(([a, b, c, d]): Prim => ({
+			k: 'path',
+			d: tube(a, b, c, d, 10, 6),
+			fill: P.red,
+			shade: true
+		})),
 		{ k: 'ellipse', o: { cx: 100, cy: 82, rx: 54, ry: 52 }, fill: P.red, shade: true },
 		// Headband, knotted at the side.
 		{
@@ -357,7 +458,12 @@ export const ANIMALS2: Record<string, Subject> = {
 		// Seam down the forehead.
 		{ k: 'line', d: 'M100 38 v5 M100 48 v5 M100 58 v5', color: P.tan, w: 2.4 },
 		// Bow at the neck.
-		{ k: 'path', d: 'M100 114 L76 102 L78 128 Z M100 114 L124 102 L122 128 Z', fill: P.red, shade: true },
+		{
+			k: 'path',
+			d: 'M100 114 L76 102 L78 128 Z M100 114 L124 102 L122 128 Z',
+			fill: P.red,
+			shade: true
+		},
 		{ k: 'circle', o: { cx: 100, cy: 114, r: 7 }, fill: P.red, shade: true },
 		...eye(84, 68, 5.5),
 		...eye(116, 68, 5.5)

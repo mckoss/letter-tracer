@@ -150,52 +150,53 @@ export const NATURE: Record<string, Subject> = {
 	// A cicada clinging to a trunk, head up, its clear wings folded like a roof
 	// over the body -- broad and blunt, so it does not read as a fly or a bee.
 	cicada: () => [
-		{ k: 'rect', x: 58, y: 24, w: 84, h: 162, rx: 10, fill: P.brown, shade: true },
+		{ k: 'rect', x: 50, y: 24, w: 100, h: 162, rx: 12, fill: P.brown, shade: true },
 		{
 			k: 'line',
-			d: 'M70 34 C 66 70, 72 100, 66 140 M132 40 C 136 80, 128 120, 134 176 M76 150 C 74 166, 78 176, 76 184',
+			d: 'M62 34 C 58 70, 64 100, 58 150 M140 40 C 144 80, 136 120, 142 178 M66 160 C 64 170, 68 178, 66 184',
 			color: P.dark,
 			w: 3
 		},
 		{
 			k: 'line',
-			d: 'M82 92 L56 80 M80 112 L52 116 M84 130 L58 146 M118 92 L144 80 M120 112 L148 116 M116 130 L142 146',
+			d: 'M84 96 L60 86 M82 114 L56 120 M86 132 L64 148 M116 96 L140 86 M118 114 L144 120 M114 132 L136 148',
 			color: P.dark,
 			w: 5
 		},
-		{ k: 'ellipse', o: { cx: 100, cy: 128, rx: 22, ry: 42 }, fill: P.slate, shade: true },
-		...pair('M100 86 C 80 90, 64 120, 64 152 C 64 172, 74 182, 82 178 C 90 170, 98 130, 100 86 Z').map(
-			(d): Prim => ({ k: 'path', d, fill: P.sky, op: 0.72, shade: true })
+		{ k: 'ellipse', o: { cx: 100, cy: 128, rx: 26, ry: 44 }, fill: P.slate, shade: true },
+		...pair('M100 88 C 76 92, 58 124, 60 156 C 60 174, 70 184, 80 180 C 92 170, 98 132, 100 88 Z').map(
+			(d): Prim => ({ k: 'path', d, fill: P.sky, op: 0.8, shade: true })
 		),
 		{
 			k: 'line',
 			d: [
-				'M98 92 C 84 110, 74 140, 72 172',
-				'M98 104 C 90 130, 84 156, 82 176',
-				'M76 132 C 82 134, 88 136, 94 136',
-				'M72 154 C 78 156, 84 158, 88 158'
+				'M98 92 C 80 110, 66 140, 66 172',
+				'M98 104 C 90 130, 84 156, 80 178',
+				'M70 128 C 78 132, 86 134, 95 134',
+				'M66 154 C 74 156, 82 158, 88 158'
 			]
 				.flatMap(pair)
 				.join(' '),
 			color: P.dark,
 			w: 2.6
 		},
-		{ k: 'ellipse', o: { cx: 100, cy: 80, rx: 26, ry: 16 }, fill: P.dark, shade: true },
-		{ k: 'ellipse', o: { cx: 100, cy: 60, rx: 30, ry: 14 }, fill: P.dark, shade: true },
-		{ k: 'circle', o: { cx: 72, cy: 58, r: 9 }, fill: P.rust, shade: true },
-		{ k: 'circle', o: { cx: 128, cy: 58, r: 9 }, fill: P.rust, shade: true },
-		{ k: 'circle', o: { cx: 75, cy: 55, r: 3 }, fill: P.white },
-		{ k: 'circle', o: { cx: 131, cy: 55, r: 3 }, fill: P.white }
+		{ k: 'ellipse', o: { cx: 100, cy: 80, rx: 30, ry: 17 }, fill: P.dark, shade: true },
+		{ k: 'path', d: 'M86 76 L100 88 L114 76 Z', fill: P.teal },
+		{ k: 'ellipse', o: { cx: 100, cy: 58, rx: 32, ry: 14 }, fill: P.dark, shade: true },
+		{ k: 'circle', o: { cx: 68, cy: 56, r: 10 }, fill: P.tan, shade: true },
+		{ k: 'circle', o: { cx: 132, cy: 56, r: 10 }, fill: P.tan, shade: true },
+		...eye(69, 56, 5),
+		...eye(131, 56, 5)
 	],
 
 	sunflower: () => {
-		const c: Pt = [100, 82];
+		const c: Pt = [100, 86];
 		const petals = Array.from({ length: 14 }, (_, i): Prim => {
 			const a = (i * 360) / 14;
-			const [cx, cy] = rot(a, c[0], c[1])([c[0], c[1] - 40]);
+			const [cx, cy] = rot(a, c[0], c[1])([c[0], c[1] - 43]);
 			return {
 				k: 'ellipse',
-				o: { cx, cy, rx: 12, ry: 20, rot: a },
+				o: { cx, cy, rx: 13, ry: 21, rot: a },
 				fill: i % 2 ? P.gold : P.yellow,
 				shade: true
 			};
@@ -206,7 +207,7 @@ export const NATURE: Record<string, Subject> = {
 			{ k: 'ellipse', o: { cx: 130, cy: 150, rx: 28, ry: 12, rot: -24 }, fill: P.green, shade: true },
 			...petals.filter((_, i) => i % 2),
 			...petals.filter((_, i) => !(i % 2)),
-			{ k: 'circle', o: { cx: 100, cy: 82, r: 30 }, fill: P.brown, shade: true },
+			{ k: 'circle', o: { cx: 100, cy: 86, r: 32 }, fill: P.brown, shade: true },
 			{
 				k: 'line',
 				d: dots([
@@ -248,14 +249,24 @@ export const NATURE: Record<string, Subject> = {
 
 	banana: () => {
 		const one = 'M64 54 C 58 110, 92 166, 166 150 C 172 148, 172 140, 164 140 C 112 142, 82 108, 80 56 Z';
-		const at = (deg: number) => xf(one, rot(deg, 72, 50));
+		// Each banana is the same one, shrunk a touch and swung about the stalk.
+		const swing =
+			(deg: number) =>
+			([x, y]: Pt): Pt =>
+				rot(deg, 58, 58)([58 + (x - 72) * 0.86, 58 + (y - 50) * 0.86]);
+		const tip = (deg: number): Prim => {
+			const [cx, cy] = swing(deg)([165, 145]);
+			return { k: 'circle', o: { cx, cy, r: 4.5 }, fill: P.brown };
+		};
 		return [
-			{ k: 'path', d: at(-34), fill: P.gold, shade: true },
-			{ k: 'path', d: at(-16), fill: P.yellow, shade: true },
-			{ k: 'path', d: at(2), fill: P.yellow, shade: true },
-			{ k: 'line', d: xf('M72 74 C 78 118, 106 140, 150 144', rot(2, 72, 50)), color: P.gold, w: 3 },
-			{ k: 'rect', x: 62, y: 36, w: 18, h: 24, rx: 4, fill: P.moss, shade: true },
-			{ k: 'circle', o: { cx: 165, cy: 147, r: 4.5 }, fill: P.brown }
+			{ k: 'path', d: xf(one, swing(-20)), fill: P.gold, shade: true },
+			tip(-20),
+			{ k: 'path', d: xf(one, swing(-4)), fill: P.yellow, shade: true },
+			tip(-4),
+			{ k: 'path', d: xf(one, swing(12)), fill: P.yellow, shade: true },
+			tip(12),
+			{ k: 'line', d: xf('M72 74 C 78 118, 106 140, 150 144', swing(12)), color: P.gold, w: 3 },
+			{ k: 'rect', x: 49, y: 40, w: 18, h: 24, rx: 4, fill: P.moss, shade: true }
 		];
 	},
 
@@ -270,9 +281,10 @@ export const NATURE: Record<string, Subject> = {
 		return [
 			{ k: 'path', d: tilt('M26 100 C 34 70, 166 66, 176 96 C 170 132, 34 138, 26 100 Z'), fill: P.moss, shade: true },
 			{ k: 'line', d: tilt('M176 96 L186 88'), color: P.moss, w: 7 },
+			{ k: 'path', d: tilt('M38 100 C 50 84, 150 80, 166 96 C 150 104, 50 108, 38 100 Z'), fill: P.dark, op: 0.45 },
 			...beansAt.map(([cx, cy]): Prim => ({
 				k: 'ellipse',
-				o: { cx, cy, rx: 20, ry: 18, rot: -24 },
+				o: { cx, cy, rx: 21, ry: 19, rot: -24 },
 				fill: P.green,
 				shade: true
 			})),
@@ -285,7 +297,7 @@ export const NATURE: Record<string, Subject> = {
 			{
 				k: 'path',
 				d: tilt('M30 104 C 60 106, 140 106, 172 100 C 160 128, 44 132, 30 104 Z'),
-				fill: P.green,
+				fill: P.moss,
 				shade: true
 			},
 			{ k: 'ellipse', o: { cx: 118, cy: 160, rx: 17, ry: 14, rot: 20 }, fill: P.green, shade: true },
@@ -380,9 +392,9 @@ export const NATURE: Record<string, Subject> = {
 		// Points on the visible hemisphere, laid out by latitude and longitude and
 		// nudged a little so the net looks grown rather than ruled.
 		const P3 = (lat: number, lon: number): Pt => {
-			const j = 0.06 * Math.sin(lat * 7.1 + lon * 3.3);
+			const j = 0.1 * Math.sin(lat * 7.1 + lon * 3.3);
 			const la = lat + j;
-			const lo = lon + 0.07 * Math.cos(lat * 4.3 - lon * 5.9);
+			const lo = lon + 0.12 * Math.cos(lat * 4.3 - lon * 5.9);
 			return [C[0] + R * 0.93 * Math.cos(la) * Math.sin(lo), C[1] - R * 0.93 * Math.sin(la)];
 		};
 		const lats = [-1.1, -0.72, -0.36, 0, 0.36, 0.72, 1.1];
@@ -408,14 +420,7 @@ export const NATURE: Record<string, Subject> = {
 			fill: P.pink,
 			shade: true
 		},
-		{
-			k: 'ellipse',
-			o: { cx: 78, cy: 140, rx: 30, ry: 32, rot: 20 },
-			fill: P.cream,
-			shade: true,
-			soft: true,
-			op: 0.55
-		},
+		{ k: 'ellipse', o: { cx: 72, cy: 144, rx: 22, ry: 26, rot: 24 }, fill: P.cream, op: 0.3 },
 		{ k: 'line', d: 'M102 66 C 84 92, 82 140, 98 180', color: P.rust, w: 3.4 }
 	],
 
@@ -434,10 +439,12 @@ export const NATURE: Record<string, Subject> = {
 
 	// A whole striped melon with a red slice leaning in front of it.
 	watermelon: () => {
-		const stripes = [-40, -20, 0, 20, 40]
+		const stripes = [-44, -22, 0, 22, 44]
 			.map((dx) => {
+				const top = 84 - 52 * Math.sqrt(1 - (dx / 64) ** 2) + 6;
 				const x = 100 + dx;
-				return `M${x} 40 C ${x - 8 + dx * 0.4} 60, ${x + 8 + dx * 0.4} 80, ${x + dx * 0.15} 118`;
+				const w = dx * 0.25;
+				return `M${x} ${top.toFixed(1)} C ${x + w - 7} ${top + 22}, ${x + w + 7} ${top + 44}, ${x + w} 118`;
 			})
 			.join(' ');
 		return [
