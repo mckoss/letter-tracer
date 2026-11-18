@@ -48,14 +48,12 @@ const ballPanels = (
 		const sweep = down ? (a > 0 ? 1 : 0) : a > 0 ? 0 : 1;
 		return `A${f(Math.abs(a) * R)} ${R} ${tilt} 0 ${sweep} ${f(q.x)} ${f(q.y)}`;
 	};
-	return fills.map(
-		(fill, i): Prim => ({
-			k: 'path',
-			d: `M${f(top.x)} ${f(top.y)} ${arc(m[i], bot, true)} ${arc(m[i + 1], top, false)} Z`,
-			fill,
-			shade: true
-		})
-	);
+	return fills.map((fill, i): Prim => ({
+		k: 'path',
+		d: `M${f(top.x)} ${f(top.y)} ${arc(m[i], bot, true)} ${arc(m[i + 1], top, false)} Z`,
+		fill,
+		shade: true
+	}));
 };
 
 export const THINGS1: Record<string, Subject> = {
@@ -103,7 +101,11 @@ export const THINGS1: Record<string, Subject> = {
 			fill: P.blue,
 			shade: true
 		},
-		{ k: 'path', d: 'M82 72 C 88 84, 112 84, 118 72 L112 70 C 106 78, 94 78, 88 70 Z', fill: P.navy },
+		{
+			k: 'path',
+			d: 'M82 72 C 88 84, 112 84, 118 72 L112 70 C 106 78, 94 78, 88 70 Z',
+			fill: P.navy
+		},
 		{ k: 'rect', x: 58, y: 124, w: 84, h: 12, fill: P.white, shade: true, soft: true },
 		{ k: 'rect', x: 58, y: 146, w: 84, h: 12, fill: P.white, shade: true, soft: true }
 	],
@@ -151,7 +153,9 @@ export const THINGS1: Record<string, Subject> = {
 		{ k: 'rect', x: 56, y: 90, w: 88, h: 26, fill: P.cream, shade: true, soft: true },
 		{
 			k: 'line',
-			d: 'M56 110 ' + Array.from({ length: 11 }, (_, i) => `L${60 + i * 8} ${i % 2 ? 110 : 96}`).join(' '),
+			d:
+				'M56 110 ' +
+				Array.from({ length: 11 }, (_, i) => `L${60 + i * 8} ${i % 2 ? 110 : 96}`).join(' '),
 			color: P.red,
 			w: 4,
 			cap: 'butt'
@@ -201,7 +205,7 @@ export const THINGS1: Record<string, Subject> = {
 		{ k: 'line', d: 'M50 96 L64 88 M122 96 L136 88', color: P.white, w: 5 },
 		{ k: 'line', d: ring(64, 110, 32), color: P.navy, w: 10 },
 		{ k: 'line', d: ring(136, 110, 32), color: P.navy, w: 10 },
-		{ k: 'line', d: 'M94 102 C 96 90, 104 90, 106 102', color: P.navy, w: 9 },
+		{ k: 'line', d: 'M94 102 C 96 90, 104 90, 106 102', color: P.navy, w: 9 }
 	],
 
 	// A yellow construction hard hat: dome, crown ridge and brim.
@@ -296,7 +300,6 @@ export const THINGS1: Record<string, Subject> = {
 				fill: P.sand,
 				shade: true
 			},
-			{ k: 'line', d: 'M80 128 C 94 136, 110 134, 122 124', color: P.tan, w: 3 },
 			{ k: 'rect', x: 66, y: 166, w: 68, h: 24, rx: 6, fill: P.blue, shade: true }
 		];
 	},
@@ -308,8 +311,8 @@ export const THINGS1: Record<string, Subject> = {
 			104,
 			72,
 			-24,
-			[-1, -0.97, -0.71, -0.26, 0.26, 0.71, 0.97, 1],
-			[P.white, P.red, P.white, P.yellow, P.white, P.blue, P.white]
+			[-1, -0.64, -0.22, 0.22, 0.64, 1],
+			[P.red, P.white, P.yellow, P.white, P.blue]
 		),
 		{
 			k: 'circle',
@@ -334,8 +337,17 @@ export const THINGS1: Record<string, Subject> = {
 	balloon: () => {
 		const b = (cx: number, cy: number, fill: string, knot: string): Prim[] => [
 			{ k: 'ellipse', o: { cx, cy, rx: 30, ry: 36 }, fill, shade: true },
-			{ k: 'path', d: `M${cx} ${cy + 34} L${cx - 6} ${cy + 44} L${cx + 6} ${cy + 44} Z`, fill: knot },
-			{ k: 'ellipse', o: { cx: cx - 12, cy: cy - 16, rx: 6, ry: 10, rot: 24 }, fill: P.white, op: 0.5 }
+			{
+				k: 'path',
+				d: `M${cx} ${cy + 34} L${cx - 6} ${cy + 44} L${cx + 6} ${cy + 44} Z`,
+				fill: knot
+			},
+			{
+				k: 'ellipse',
+				o: { cx: cx - 12, cy: cy - 16, rx: 6, ry: 10, rot: 24 },
+				fill: P.white,
+				op: 0.5
+			}
 		];
 		return [
 			{

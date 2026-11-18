@@ -65,10 +65,10 @@ export const ANIMALS2: Record<string, Subject> = {
 			fill: P.green,
 			shade: true
 		},
-		{ k: 'ellipse', o: { cx: 112, cy: 122, rx: 50, ry: 24 }, fill: P.green, shade: true },
+		{ k: 'ellipse', o: { cx: 114, cy: 120, rx: 52, ry: 26 }, fill: P.green, shade: true },
 		{
 			k: 'ellipse',
-			o: { cx: 110, cy: 136, rx: 40, ry: 9 },
+			o: { cx: 112, cy: 138, rx: 36, ry: 6 },
 			fill: P.sand,
 			shade: true,
 			soft: true
@@ -80,21 +80,21 @@ export const ANIMALS2: Record<string, Subject> = {
 			fill: P.moss
 		},
 		// Inside of the mouth, then the teeth, then the jaws over them.
-		{ k: 'path', d: 'M30 114 L90 112 L90 130 L34 128 Z', fill: P.pink },
+		{ k: 'path', d: 'M30 112 L100 112 L100 134 L34 132 Z', fill: P.pink },
 		{
 			k: 'path',
-			d: 'M38 114 l4 7 l4 -7 Z M52 114 l4 7 l4 -7 Z M66 114 l4 7 l4 -7 Z M44 129 l4 -7 l4 7 Z M58 129 l4 -7 l4 7 Z M72 129 l4 -7 l4 7 Z',
+			d: 'M36 115 l5 8 l5 -8 Z M52 115 l5 8 l5 -8 Z M68 115 l5 8 l5 -8 Z M44 133 l5 -8 l5 8 Z M60 133 l5 -8 l5 8 Z M76 133 l5 -8 l5 8 Z',
 			fill: P.white
 		},
 		{
 			k: 'path',
-			d: 'M96 116 C 92 100, 76 96, 60 98 C 46 100, 32 102, 26 106 C 22 110, 24 115, 30 115 L 96 114 Z',
+			d: 'M106 118 C 100 96, 80 90, 60 94 C 44 97, 30 99, 24 104 C 20 109, 22 116, 30 116 L 106 116 Z',
 			fill: P.green,
 			shade: true
 		},
 		{
 			k: 'path',
-			d: 'M96 124 C 84 138, 60 140, 40 136 C 30 134, 26 130, 30 127 L 96 128 Z',
+			d: 'M106 128 C 96 144, 64 146, 40 142 C 28 140, 24 134, 30 131 L 106 132 Z',
 			fill: P.green,
 			shade: true
 		},
@@ -102,9 +102,9 @@ export const ANIMALS2: Record<string, Subject> = {
 		{ k: 'rect', x: 72, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
 		{ k: 'rect', x: 128, y: 134, w: 18, h: 30, rx: 9, fill: P.green, shade: true },
 		// The eye sits on a bump on top of the head.
-		{ k: 'circle', o: { cx: 76, cy: 94, r: 13 }, fill: P.green, shade: true },
-		{ k: 'circle', o: { cx: 34, cy: 104, r: 2.6 }, fill: P.dark },
-		...eye(77, 92, 6.5)
+		{ k: 'circle', o: { cx: 80, cy: 90, r: 15 }, fill: P.green, shade: true },
+		{ k: 'circle', o: { cx: 32, cy: 102, r: 3 }, fill: P.dark },
+		...eye(81, 88, 7)
 	],
 
 	// Leaping over a wave: an arched grey body with a beak and a dorsal fin, so
@@ -124,8 +124,8 @@ export const ANIMALS2: Record<string, Subject> = {
 			shade: true,
 			soft: true
 		},
-		{ k: 'circle', o: { cx: 150, cy: 140, r: 5 }, fill: P.sky },
-		{ k: 'circle', o: { cx: 160, cy: 128, r: 4 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 128, cy: 138, r: 5 }, fill: P.sky },
+		{ k: 'circle', o: { cx: 118, cy: 128, r: 4 }, fill: P.sky },
 		{ k: 'circle', o: { cx: 44, cy: 136, r: 4.5 }, fill: P.sky },
 		// Dorsal fin, behind the back.
 		{
@@ -137,7 +137,7 @@ export const ANIMALS2: Record<string, Subject> = {
 		// Flukes, at the end of the arch.
 		{
 			k: 'path',
-			d: 'M146 112 C 156 116, 168 116, 178 110 C 172 122, 164 128, 158 132 C 160 142, 158 152, 152 160 C 148 146, 144 128, 140 118 Z',
+			d: 'M144 112 C 154 108, 164 98, 174 90 C 172 104, 166 116, 160 124 C 168 130, 172 140, 172 152 C 162 144, 150 132, 142 122 Z',
 			fill: P.slate,
 			shade: true
 		},
@@ -263,8 +263,17 @@ export const ANIMALS2: Record<string, Subject> = {
 				[[128, 116], [146, 140], [170, 150], [164, 172]]
 			] as Pt[][]
 		).map(
-			([a, b, c, d]): Prim => ({ k: 'path', d: tube(a, b, c, d, 22, 9), fill: P.red, shade: true })
+			([a, b, c, d]): Prim => ({ k: 'path', d: tube(a, b, c, d, 22, 10), fill: P.red, shade: true })
 		),
+		// Each tip curls back up on itself.
+		...(
+			[
+				[[36, 170], [34, 186], [54, 186], [50, 170]],
+				[[72, 180], [80, 190], [94, 180], [86, 170]],
+				[[128, 180], [120, 190], [106, 180], [114, 170]],
+				[[164, 170], [166, 186], [146, 186], [150, 170]]
+			] as Pt[][]
+		).map(([a, b, c, d]): Prim => ({ k: 'path', d: tube(a, b, c, d, 10, 6), fill: P.red, shade: true })),
 		{ k: 'ellipse', o: { cx: 100, cy: 82, rx: 54, ry: 52 }, fill: P.red, shade: true },
 		// Headband, knotted at the side.
 		{
@@ -346,7 +355,7 @@ export const ANIMALS2: Record<string, Subject> = {
 			w: 2.6
 		},
 		// Seam down the forehead.
-		{ k: 'line', d: 'M100 36 v5 M100 46 v5 M100 56 v5', color: P.rust, w: 2.6 },
+		{ k: 'line', d: 'M100 38 v5 M100 48 v5 M100 58 v5', color: P.tan, w: 2.4 },
 		// Bow at the neck.
 		{ k: 'path', d: 'M100 114 L76 102 L78 128 Z M100 114 L124 102 L122 128 Z', fill: P.red, shade: true },
 		{ k: 'circle', o: { cx: 100, cy: 114, r: 7 }, fill: P.red, shade: true },
@@ -365,10 +374,10 @@ export const ANIMALS2: Record<string, Subject> = {
 		{
 			k: 'path',
 			d: 'M76 64 L84 28 L116 28 L124 64 Z',
-			fill: P.blue,
+			fill: P.red,
 			shade: true
 		},
-		{ k: 'rect', x: 72, y: 58, w: 56, h: 9, rx: 4, fill: P.navy, shade: true },
+		{ k: 'rect', x: 72, y: 58, w: 56, h: 9, rx: 4, fill: P.rust, shade: true },
 		{ k: 'path', d: 'M98 92 L118 96 L98 100 Z', fill: P.orange },
 		{ k: 'ellipse', o: { cx: 78, cy: 98, rx: 6, ry: 4 }, fill: P.pink },
 		{ k: 'ellipse', o: { cx: 122, cy: 98, rx: 6, ry: 4 }, fill: P.pink },

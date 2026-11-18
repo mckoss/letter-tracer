@@ -138,7 +138,18 @@ export const THINGS2: Record<string, Subject> = {
 			{ k: 'rect', x: 49, y: 44, w: 100, h: 136, rx: 5, fill: P.cream, shade: true, ...r },
 			{ k: 'rect', x: 44, y: 38, w: 100, h: 136, rx: 5, fill: P.teal, shade: true, ...r },
 			{ k: 'rect', x: 44, y: 38, w: 18, h: 136, rx: 4, fill: P.navy, shade: true, ...r },
-			{ k: 'rect', x: 74, y: 112, w: 58, h: 44, rx: 4, fill: P.white, shade: true, soft: true, ...r },
+			{
+				k: 'rect',
+				x: 74,
+				y: 112,
+				w: 58,
+				h: 44,
+				rx: 4,
+				fill: P.white,
+				shade: true,
+				soft: true,
+				...r
+			},
 			{ k: 'rect', x: 80, y: 126, w: 46, h: 3, fill: P.grey, ...r },
 			{ k: 'rect', x: 80, y: 138, w: 46, h: 3, fill: P.grey, ...r },
 			{ k: 'circle', o: { cx: 103, cy: 72, r: 14 }, fill: P.yellow, shade: true, soft: true },
@@ -165,7 +176,13 @@ export const THINGS2: Record<string, Subject> = {
 		// Holder: a saucer with a ring handle.
 		{ k: 'line', d: 'M150 166 C 176 160, 178 184, 154 178', color: P.gold, w: 6 },
 		{ k: 'ellipse', o: { cx: 100, cy: 170, rx: 58, ry: 14 }, fill: P.gold, shade: true },
-		{ k: 'ellipse', o: { cx: 100, cy: 164, rx: 30, ry: 8 }, fill: P.yellow, shade: true, soft: true },
+		{
+			k: 'ellipse',
+			o: { cx: 100, cy: 164, rx: 30, ry: 8 },
+			fill: P.yellow,
+			shade: true,
+			soft: true
+		},
 		{ k: 'rect', x: 80, y: 84, w: 40, h: 82, rx: 4, fill: P.red, shade: true },
 		// Melted wax pooled over the rim and running down.
 		{
@@ -177,8 +194,16 @@ export const THINGS2: Record<string, Subject> = {
 		},
 		{ k: 'ellipse', o: { cx: 100, cy: 84, rx: 20, ry: 5 }, fill: P.pink, shade: true, soft: true },
 		{ k: 'line', d: 'M100 84 L100 72', color: P.dark, w: 3 },
-		{ k: 'path', d: 'M100 32 C 112 50, 116 62, 110 70 C 106 76, 94 76, 90 70 C 84 62, 88 50, 100 32 Z', fill: P.orange },
-		{ k: 'path', d: 'M100 50 C 106 60, 108 66, 104 70 C 102 72, 98 72, 96 70 C 92 66, 94 60, 100 50 Z', fill: P.yellow }
+		{
+			k: 'path',
+			d: 'M100 32 C 112 50, 116 62, 110 70 C 106 76, 94 76, 90 70 C 84 62, 88 50, 100 32 Z',
+			fill: P.orange
+		},
+		{
+			k: 'path',
+			d: 'M100 50 C 106 60, 108 66, 104 70 C 102 72, 98 72, 96 70 C 92 66, 94 60, 100 50 Z',
+			fill: P.yellow
+		}
 	],
 
 	clock: () => [
@@ -210,25 +235,25 @@ export const THINGS2: Record<string, Subject> = {
 			},
 			{
 				k: 'path',
-				d: t('M93 120 C 92 102, 74 100, 74 86 L74 74 L126 74 L126 86 C 126 100, 108 102, 107 120 Z'),
+				d: t(
+					'M93 120 C 92 102, 72 100, 72 86 L72 74 L128 74 L128 86 C 128 100, 108 102, 107 120 Z'
+				),
 				fill: P.grey,
 				shade: true
 			},
-			...[0, 1, 2, 3].map(
-				(i): Prim => ({
-					k: 'rect',
-					x: 74 + i * 14.33,
-					y: 26,
-					w: 9,
-					h: 56,
-					rx: 4.5,
-					rot: 30,
-					cx: 100,
-					cy: 106,
-					fill: P.grey,
-					shade: true
-				})
-			)
+			...[0, 1, 2, 3].map((i): Prim => ({
+				k: 'rect',
+				x: 72 + i * 15.17,
+				y: 26,
+				w: 10.5,
+				h: 56,
+				rx: 5,
+				rot: 30,
+				cx: 100,
+				cy: 106,
+				fill: P.grey,
+				shade: true
+			}))
 		];
 	},
 
@@ -272,7 +297,8 @@ export const THINGS2: Record<string, Subject> = {
 			.map((o) => {
 				const h = Math.sqrt(R * R - o * o) - 3;
 				return (
-					`M${100 - h} ${60 + o} L${100 + h} ${60 + o} ` + `M${100 + o} ${60 - h} L${100 + o} ${60 + h}`
+					`M${100 - h} ${60 + o} L${100 + h} ${60 + o} ` +
+					`M${100 + o} ${60 - h} L${100 + o} ${60 + h}`
 				);
 			})
 			.join(' ');
@@ -286,7 +312,19 @@ export const THINGS2: Record<string, Subject> = {
 			{ k: 'rect', x: 95, y: 128, w: 10, h: 18, rx: 3, rot: deg, cx: C[0], cy: C[1], fill: P.red },
 			{ k: 'circle', o: { cx: hx, cy: hy, r: R }, fill: P.grey, shade: true },
 			{ k: 'line', d: t(mesh), color: P.slate, w: 2.5 },
-			{ k: 'rect', x: 80, y: 92, w: 40, h: 14, rx: 4, rot: deg, cx: C[0], cy: C[1], fill: P.navy, shade: true }
+			{
+				k: 'rect',
+				x: 80,
+				y: 92,
+				w: 40,
+				h: 14,
+				rx: 4,
+				rot: deg,
+				cx: C[0],
+				cy: C[1],
+				fill: P.navy,
+				shade: true
+			}
 		];
 	},
 
@@ -327,9 +365,28 @@ export const THINGS2: Record<string, Subject> = {
 			shade: true
 		},
 		{ k: 'ellipse', o: { cx: 168, cy: 102, rx: 11, ry: 50 }, fill: P.gold, shade: true },
-		{ k: 'ellipse', o: { cx: 170, cy: 102, rx: 6, ry: 40 }, fill: P.brown, shade: true, soft: true },
-		...[72, 88, 104].map((x): Prim => ({ k: 'rect', x, y: 74, w: 10, h: 24, rx: 2, fill: P.gold, shade: true })),
-		...[72, 88, 104].map((x): Prim => ({ k: 'circle', o: { cx: x + 5, cy: 72, r: 6.5 }, fill: P.yellow })),
+		{
+			k: 'ellipse',
+			o: { cx: 170, cy: 102, rx: 6, ry: 40 },
+			fill: P.brown,
+			shade: true,
+			soft: true
+		},
+		...[72, 88, 104].map((x): Prim => ({
+			k: 'rect',
+			x,
+			y: 74,
+			w: 10,
+			h: 24,
+			rx: 2,
+			fill: P.gold,
+			shade: true
+		})),
+		...[72, 88, 104].map((x): Prim => ({
+			k: 'circle',
+			o: { cx: x + 5, cy: 72, r: 6.5 },
+			fill: P.yellow
+		})),
 		// A red cord with a tassel, as toy bugles have.
 		{ k: 'line', d: 'M62 108 C 70 130, 92 150, 110 146', color: P.red, w: 4 },
 		{ k: 'circle', o: { cx: 110, cy: 146, r: 5 }, fill: P.red },
